@@ -1,6 +1,6 @@
 import fs, { mkdirSync } from 'node:fs';
 import path from 'node:path';
-import { test } from '@playwright/test';
+import { test, type Coverage, type Page } from '@playwright/test';
 import { LOCALHOST } from './constants';
 
 type CoverageReportRange = {
@@ -29,21 +29,35 @@ const extendedTest = test.extend({
     const affectedFiles = new Map<string, string[]>();
     const testInfo = await test.info();
 
-    await page.coverage.startJSCoverage();
+    await safeCoverageMethod(page, 'startJSCoverage');
 
     await use(page);
 
-    const coverage = await page.coverage.stopJSCoverage();
+    const coverage = await safeCoverageMethod(page, 'stopJSCoverage');
 
-    await storeAffectedFiles(
-      testInfo.titlePath.join(' - '),
-      coverage,
-      affectedFiles,
-    );
+    if (coverage) {
+      await storeAffectedFiles(
+        testInfo.titlePath.join(' - '),
+        coverage,
+        affectedFiles,
+      );
 
-    await writeAffectedFiles(affectedFiles);
+      await writeAffectedFiles(affectedFiles);
+    }
   },
 });
+
+async function safeCoverageMethod<T extends keyof Coverage>(
+  page: Page,
+  method: T,
+): Promise<Awaited<ReturnType<Coverage[T]> | void>> {
+  try {
+    return (await page.coverage[method]()) as any;
+  } catch {
+    // add debug log
+    return undefined as any;
+  }
+}
 
 export { extendedTest as test };
 export const expect = extendedTest.expect;

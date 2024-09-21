@@ -15,8 +15,16 @@ async function findRelatedTests(): Promise<{
   const impactedTestNames = [];
   const { stdout } = await exec('git diff --name-only');
   const modifiedFiles = stdout.trim().split('\n');
+  const relatedTestsFolder = path.join(process.cwd(), '.affected-files');
 
-  const files = fs.readdirSync(path.join(process.cwd(), '.affected-files'));
+  if (!fs.existsSync(relatedTestsFolder)) {
+    return {
+      impactedTestFiles: [],
+      impactedTestNames: [],
+    };
+  }
+
+  const files = fs.readdirSync(relatedTestsFolder);
 
   for (const file of files) {
     const affected = fs.readFileSync(
@@ -66,12 +74,42 @@ export default async function globalSetup(config: FullConfig) {
 
   const testTitleRegex = new RegExp(`(${regexPattern})$`);
 
-  console.log(impactedTestNames);
-  console.log(testTitleRegex);
+  // console.log(impactedTestNames);
+  // console.log(testTitleRegex);
 
-  config.grep = testTitleRegex;
+  // config.grep = testTitleRegex;
 
-  config.projects.forEach((project) => {
-    project.grep = testTitleRegex;
-  });
+  // config.projects.forEach((project) => {
+  //   project.grep = testTitleRegex;
+  // });
+
+  return testTitleRegex;
+}
+
+export async function getImpactedTests(): Promise<RegExp | undefined> {
+  const { impactedTestNames } = await findRelatedTests();
+
+  if (impactedTestNames.length === 0) {
+    console.log('No tests to run');
+    return;
+  }
+
+  const escapedTitles = impactedTestNames.map((title) =>
+    title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+  );
+
+  const regexPattern = escapedTitles.join('|');
+
+  const testTitleRegex = new RegExp(`(${regexPattern})$`);
+
+  // console.log(impactedTestNames);
+  // console.log(testTitleRegex);
+
+  // config.grep = testTitleRegex;
+
+  // config.projects.forEach((project) => {
+  //   project.grep = testTitleRegex;
+  // });
+
+  return testTitleRegex;
 }
