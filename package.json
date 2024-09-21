@@ -1,0 +1,47 @@
+{
+  "name": "playwright-related-tests",
+  "version": "1.0.0",
+  "description": "Run only tests that are related to your changes",
+  "private": "true",
+  "main": "dist/index.js",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": "./dist/index.js",
+      "default": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "playwright",
+    "related-tests"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "ci:build": "npm run build && npm run lint && npm run check-exports && npm run test",
+    "check-exports": "attw --pack .",
+    "lint": "prettier --check . && tsc",
+    "lint:fix": "prettier --write .",
+    "local-release": "changeset version && changeset publish",
+    "prepublishOnly": "npm run ci",
+    "test": "vitest run"
+  },
+  "author": "Mario Cadenas",
+  "license": "The Clear BSD License",
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.16.4",
+    "@changesets/cli": "^2.27.8",
+    "@playwright/test": "^1.47.2",
+    "@types/node": "^22.5.5",
+    "prettier": "^3.3.3",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.1"
+  },
+  "peerDependencies": {
+    "@playwright/test": ">=1.x"
+  },
+  "type": "module"
+}
