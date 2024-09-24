@@ -1,7 +1,7 @@
 import fs, { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { test, type Coverage, type Page } from '@playwright/test';
-import { LOCALHOST } from './constants';
+import { RelatedTestsConfig } from '../config';
 
 type CoverageReportRange = {
   count: number;
@@ -80,7 +80,6 @@ function writeAffectedFiles(affectedFiles: Map<string, string[]>) {
   }
 
   for (const [testName, files] of affectedFiles.entries()) {
-    console.log(testName, files);
     fs.writeFileSync(
       path.join(AFFECTED_FILES_FOLDER, `${testName}.json`),
       JSON.stringify(files, null, 2),
@@ -93,14 +92,15 @@ async function storeAffectedFiles(
   coverage: CoverageReport[],
   affectedFiles: Map<string, string[]>,
 ) {
+  const rtc = RelatedTestsConfig.instance;
+  const rtcConfig = rtc.getConfig();
+
   return Promise.all(
     coverage.map(async (entry) => {
-      // TODO: URL matching should be configured by the user
-      if (entry.url.includes('src')) {
+      if (entry.url.includes(rtcConfig.assetUrlMatching)) {
         addAffectedFile(
           testName,
-          // TODO: url replace should be configured by the user
-          entry.url.replace(LOCALHOST + '/', ''),
+          entry.url.replace(rtcConfig.url + '/', ''),
           affectedFiles,
         );
       }

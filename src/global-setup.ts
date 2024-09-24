@@ -58,35 +58,7 @@ ${chalk.cyan(impactedTestFiles.join('\n\n'))}
   return { impactedTestFiles, impactedTestNames };
 }
 
-export default async function globalSetup(config: FullConfig) {
-  const { impactedTestNames } = await findRelatedTests();
-
-  if (impactedTestNames.length === 0) {
-    console.log('No tests to run');
-    return '';
-  }
-
-  const escapedTitles = impactedTestNames.map((title) =>
-    title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-  );
-
-  const regexPattern = escapedTitles.join('|');
-
-  const testTitleRegex = new RegExp(`(${regexPattern})$`);
-
-  // console.log(impactedTestNames);
-  // console.log(testTitleRegex);
-
-  // config.grep = testTitleRegex;
-
-  // config.projects.forEach((project) => {
-  //   project.grep = testTitleRegex;
-  // });
-
-  return testTitleRegex;
-}
-
-export async function getImpactedTests(): Promise<RegExp | undefined> {
+export async function getImpactedTestsRegex(): Promise<RegExp | undefined> {
   const { impactedTestNames } = await findRelatedTests();
 
   if (impactedTestNames.length === 0) {
@@ -102,14 +74,21 @@ export async function getImpactedTests(): Promise<RegExp | undefined> {
 
   const testTitleRegex = new RegExp(`(${regexPattern})$`);
 
-  // console.log(impactedTestNames);
-  // console.log(testTitleRegex);
-
-  // config.grep = testTitleRegex;
-
-  // config.projects.forEach((project) => {
-  //   project.grep = testTitleRegex;
-  // });
-
   return testTitleRegex;
+}
+
+export async function updateConfigWithImpactedTests(
+  config: FullConfig,
+): Promise<void> {
+  const regex = await getImpactedTestsRegex();
+
+  if (regex) {
+    config.grep = regex;
+
+    config.projects.forEach((project) => {
+      project.grep = regex;
+    });
+  } else {
+    console.debug(`${chalk.blue('[PlaywrighRelatedTests]')}: No tests found`);
+  }
 }

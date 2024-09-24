@@ -1,2 +1,6 @@
 export * from './extend';
-export { getImpactedTests } from './global-setup';
+export {
+  getImpactedTestsRegex,
+  updateConfigWithImpactedTests,
+} from './global-setup';
+export { RelatedTestsConfig } from './config';
