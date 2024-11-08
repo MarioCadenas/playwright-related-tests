@@ -34,6 +34,7 @@
     "@arethetypeswrong/cli": "^0.16.4",
     "@changesets/cli": "^2.27.8",
     "@playwright/test": "^1.47.2",
+    "@types/isomorphic-fetch": "^0.0.39",
     "@types/node": "^22.5.5",
     "prettier": "^3.3.3",
     "tsup": "^8.3.0",
@@ -43,5 +44,8 @@
   "peerDependencies": {
     "@playwright/test": ">=1.x"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "isomorphic-fetch": "^3.0.0"
+  }
 }
