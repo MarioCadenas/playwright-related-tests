@@ -1,9 +1,11 @@
+import type { FullConfig } from '@playwright/test';
+import chalk from 'chalk';
+import { exec as syncExec } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { exec as syncExec } from 'node:child_process';
 import { promisify } from 'node:util';
-import chalk from 'chalk';
-import type { FullConfig } from '@playwright/test';
+import { RelatedTestsConfig } from './config';
+import { logger } from './logger';
 
 const exec = promisify(syncExec);
 
@@ -37,21 +39,19 @@ async function findRelatedTests(): Promise<{
 
     if (impacted) {
       const fileName = file.replace('.json', '').split(' - ')[0]!;
+      const exactTestName = file
+        .replace('.json', '')
+        .replace(fileName, '')
+        .replace(' - ', '')
+        .replaceAll(' - ', ' ')
+        .trim();
 
       impactedTestFiles.push(fileName);
-      impactedTestNames.push(
-        file
-          .replace('.json', '')
-          .replace(fileName, '')
-          .replace(' - ', '')
-          .replaceAll(' - ', ' ')
-          .trim(),
-      );
+      impactedTestNames.push(`${fileName} ${exactTestName}`);
     }
   }
 
-  console.log(`
-Running only impacted tests files \n
+  logger.log(`Running only impacted tests files \n
 ${chalk.cyan(impactedTestFiles.join('\n\n'))}
 `);
 
@@ -62,7 +62,7 @@ export async function getImpactedTestsRegex(): Promise<RegExp | undefined> {
   const { impactedTestNames } = await findRelatedTests();
 
   if (impactedTestNames.length === 0) {
-    console.log('No tests to run');
+    logger.debug(`No tests impacted by changes`);
     return;
   }
 
@@ -73,6 +73,12 @@ export async function getImpactedTestsRegex(): Promise<RegExp | undefined> {
   const regexPattern = escapedTitles.join('|');
 
   const testTitleRegex = new RegExp(`(${regexPattern})$`);
+
+  logger.debug(
+    `Matching these tests:\n
+${testTitleRegex}
+    `,
+  );
 
   return testTitleRegex;
 }
@@ -89,6 +95,11 @@ export async function updateConfigWithImpactedTests(
       project.grep = regex;
     });
   } else {
-    console.debug(`${chalk.blue('[PlaywrighRelatedTests]')}: No tests found`);
+    const rtc = RelatedTestsConfig.instance;
+    const rtcConfig = rtc.getConfig();
+
+    if (rtcConfig.exitProcess) {
+      process.exit(0);
+    }
   }
 }

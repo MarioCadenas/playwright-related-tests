@@ -5,12 +5,15 @@
 ```ts
 // global-setup.ts
 import { FullConfig } from '@playwright/test';
-import * as RTC from 'playwright-related-tests';
+import {
+  RelatedTestsConfig,
+  getImpactedTestsRegex,
+} from 'playwright-related-tests';
 
 export default async function globalSetup(config: FullConfig) {
   RTC.RelatedTestsConfig.init({
     url: 'http://localhost:5173',
-    assetUrlMatching: 'src',
+    affectedIgnorePatterns: ['some-js-file.js', 'some external'],
   });
 
   const testTitleRegex = await RTC.getImpactedTestsRegex();
@@ -22,6 +25,26 @@ export default async function globalSetup(config: FullConfig) {
       project.grep = testTitleRegex;
     });
   }
+}
+```
+
+or
+
+```ts
+// global-setup.ts
+import { FullConfig } from '@playwright/test';
+import {
+  RelatedTestsConfig,
+  updateConfigWithImpactedTests,
+} from 'playwright-related-tests';
+
+export default async function globalSetup(config: FullConfig) {
+  RTC.RelatedTestsConfig.init({
+    url: 'http://localhost:5173',
+    exitProcess: false,
+  });
+
+  await updateConfigWithImpactedTests();
 }
 ```
 

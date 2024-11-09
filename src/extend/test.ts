@@ -1,43 +1,19 @@
+import { test, type Coverage, type Page } from '@playwright/test';
 import fs, { mkdirSync } from 'node:fs';
 import path from 'node:path';
-import { test, type Coverage, type Page } from '@playwright/test';
 import { RelatedTestsConfig } from '../config';
-import fetch from 'isomorphic-fetch';
+import { getSourceMap } from './source-map';
+import type { CoverageReport } from './types';
+import { outOfProjectFiles, toGitComparable } from './utils';
+import { logger } from '../logger';
 
-type CoverageReportRange = {
-  count: number;
-  startOffset: number;
-  endOffset: number;
-};
-
-type CoverageReportFunction = {
-  functionName: string;
-  isBlockCoverage: boolean;
-  ranges: CoverageReportRange[];
-};
-
-type CoverageReport = {
-  url: string;
-  scriptId: string;
-  source?: string;
-  functions: CoverageReportFunction[];
-};
-
-type SourceMap = {
-  version: number;
-  sources: string[];
-  names: string[];
-  mappings: string;
-  file: string;
-  sourcesContent: string[];
-  sourceRoot: string;
-};
+type AffectedFiles = Map<string, Set<string>>;
 
 const AFFECTED_FILES_FOLDER = '.affected-files';
 
 const extendedTest = test.extend({
   page: async ({ page }, use) => {
-    const affectedFiles = new Map<string, string[]>();
+    const affectedFiles: AffectedFiles = new Map();
     const testInfo = await test.info();
 
     await safeCoverageMethod(page, 'startJSCoverage');
@@ -76,24 +52,27 @@ export const expect = extendedTest.expect;
 function addAffectedFile(
   testName: string,
   fileName: string,
-  affectedFiles: Map<string, string[]>,
+  affectedFiles: AffectedFiles,
 ) {
   if (affectedFiles.has(testName)) {
-    affectedFiles.get(testName)?.push(fileName);
+    affectedFiles.get(testName)?.add(fileName);
   } else {
-    affectedFiles.set(testName, [fileName]);
+    affectedFiles.set(testName, new Set([fileName]));
   }
 }
 
-function writeAffectedFiles(affectedFiles: Map<string, string[]>) {
+function writeAffectedFiles(affectedFiles: AffectedFiles) {
   if (!fs.existsSync(AFFECTED_FILES_FOLDER)) {
     mkdirSync(AFFECTED_FILES_FOLDER, { recursive: true });
   }
 
   for (const [testName, files] of affectedFiles.entries()) {
+    logger.debug(
+      `Writing the following files: \n${Array.from(files.values()).join('\n')}`,
+    );
     fs.writeFileSync(
       path.join(AFFECTED_FILES_FOLDER, `${testName}.json`),
-      JSON.stringify(files, null, 2),
+      JSON.stringify(Array.from(files.values()), null, 2),
     );
   }
 }
@@ -101,10 +80,13 @@ function writeAffectedFiles(affectedFiles: Map<string, string[]>) {
 async function storeAffectedFiles(
   testName: string,
   coverage: CoverageReport[],
-  affectedFiles: Map<string, string[]>,
+  affectedFiles: AffectedFiles,
 ) {
   const rtc = RelatedTestsConfig.instance;
   const rtcConfig = rtc.getConfig();
+
+  // TODO: This should be removed
+  process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 
   return Promise.all(
     coverage.map(async (entry) => {
@@ -116,7 +98,14 @@ async function storeAffectedFiles(
         if (sourceMap) {
           const sources = sourceMap.sources
             .filter(outOfProjectFiles)
-            .map(toGitComparable);
+            .map(toGitComparable)
+            // TODO: This filter should be moved with the other one and not repeated down in the else
+            .filter(
+              (value) =>
+                !rtcConfig.affectedIgnorePatterns.some((pattern) =>
+                  value.match(pattern),
+                ),
+            );
           const files = new Set(sources);
 
           for (const source of files.values()) {
@@ -125,7 +114,12 @@ async function storeAffectedFiles(
             addAffectedFile(testName, affectedFile, affectedFiles);
           }
         } else {
-          if (entry.url.includes(rtcConfig.assetUrlMatching)) {
+          // TODO: Improve how we store the name of the file
+          if (
+            !rtcConfig.affectedIgnorePatterns.some((pattern) =>
+              entry.url.match(pattern),
+            )
+          ) {
             addAffectedFile(
               testName,
               entry.url.replace(rtcConfig.url + '/', ''),
@@ -136,84 +130,4 @@ async function storeAffectedFiles(
       }
     }),
   );
-}
-
-function outOfProjectFiles(source: string) {
-  return !source.startsWith('../') && !source.startsWith('webpack');
-}
-
-function toGitComparable(path: string) {
-  let normalizedPath = path.replace(/\\/g, '/');
-
-  if (normalizedPath.startsWith('./')) {
-    normalizedPath = normalizedPath.substring(2);
-  }
-
-  // Remove query params
-  normalizedPath = normalizedPath.replace(/\?.*$/, '');
-
-  return normalizedPath;
-}
-
-function fixSourceMap(sourceMap: SourceMap) {
-  if (!sourceMap || sourceMap.sources.length === 0) {
-    return undefined;
-  }
-  return {
-    ...sourceMap,
-    sources: sourceMap.sources.map((sourcePath) =>
-      sourcePath.replace(/^webpack:\/\/\//, ''),
-    ),
-  };
-}
-
-async function getSourceMap(entry: CoverageReport) {
-  // TODO: This should be removed
-  process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
-  const base64Header = 'data:application/json;charset=utf-8;base64,';
-  const match = [
-    ...(entry.source ?? '').matchAll(/\/\/# sourceMappingURL=(.*)/g),
-  ].map((match) => match[1]);
-
-  const sourceMappingBase64 = match.find((sourceMap) =>
-    sourceMap?.startsWith(base64Header),
-  );
-
-  if (sourceMappingBase64) {
-    const buffer = Buffer.from(
-      sourceMappingBase64.slice(base64Header.length),
-      'base64',
-    );
-
-    return fixSourceMap(JSON.parse(buffer.toString()));
-  }
-
-  const sourceMappingURL = match.find((sourceMap) =>
-    sourceMap?.startsWith('https'),
-  );
-
-  if (sourceMappingURL) {
-    try {
-      const response = await fetch(sourceMappingURL).then((r) => r.json());
-
-      console.log(response);
-
-      return fixSourceMap(response);
-    } catch (error) {
-      console.error(error);
-    }
-
-    // const possibleSourceMaps = [sourceMappingURL];
-    // const responses = await Promise.allSettled(
-    //   possibleSourceMaps.map((url) => fetch(url))
-    // );
-
-    // console.log(responses);
-    // const response = responses.find(
-    //   (result) => result.status === "fulfilled" && result.value?.status === 200
-    // )?.value;
-    // return fixSourceMap(await response?.json());
-  }
-
-  return undefined;
 }
