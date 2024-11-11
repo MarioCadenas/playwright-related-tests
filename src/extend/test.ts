@@ -2,10 +2,10 @@ import { test, type Coverage, type Page } from '@playwright/test';
 import fs, { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { RelatedTestsConfig } from '../config';
+import { FilePreparator } from '../file-preparator';
+import { logger } from '../logger';
 import { getSourceMap } from './source-map';
 import type { CoverageReport } from './types';
-import { outOfProjectFiles, toGitComparable } from './utils';
-import { logger } from '../logger';
 
 type AffectedFiles = Map<string, Set<string>>;
 
@@ -84,6 +84,7 @@ async function storeAffectedFiles(
 ) {
   const rtc = RelatedTestsConfig.instance;
   const rtcConfig = rtc.getConfig();
+  const filePreparator = new FilePreparator(rtcConfig);
 
   // TODO: This should be removed
   process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
@@ -97,28 +98,25 @@ async function storeAffectedFiles(
 
         if (sourceMap) {
           const sources = sourceMap.sources
-            .filter(outOfProjectFiles)
-            .map(toGitComparable)
-            // TODO: This filter should be moved with the other one and not repeated down in the else
-            .filter(
-              (value) =>
-                !rtcConfig.affectedIgnorePatterns.some((pattern) =>
-                  value.match(pattern),
-                ),
-            );
+            .filter(filePreparator.outOfProjectFiles)
+            .map(filePreparator.toGitComparable);
+          // TODO: This filter should be moved with the other one and not repeated down in the else
+          // .filter(removeIgnoredFiles);
           const files = new Set(sources);
 
           for (const source of files.values()) {
-            const affectedFile = toGitComparable(source);
+            // Still needed?
+            const affectedFile = filePreparator.toGitComparable(source);
 
             addAffectedFile(testName, affectedFile, affectedFiles);
           }
         } else {
           // TODO: Improve how we store the name of the file
           if (
-            !rtcConfig.affectedIgnorePatterns.some((pattern) =>
-              entry.url.match(pattern),
-            )
+            // !rtcConfig.affectedIgnorePatterns.some((pattern) =>
+            //   entry.url.match(pattern),
+            // )
+            !filePreparator.ignorePatternChecker(entry.url)
           ) {
             addAffectedFile(
               testName,

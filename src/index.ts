@@ -1,5 +1,5 @@
 export { RelatedTestsConfig } from './config';
-export * from './extend';
+export { test, expect } from './extend';
 export {
   getImpactedTestsRegex,
   updateConfigWithImpactedTests,

@@ -2,10 +2,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'url';
 
-interface Config {
-  url: string;
-  exitProcess: boolean;
+export interface Config {
   affectedIgnorePatterns: string[];
+  url: string;
+  exitProcess?: boolean;
 }
 
 const FILENAME = 'config.json';

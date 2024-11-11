@@ -1,7 +1,7 @@
 import { logger } from '../logger';
 import type { CoverageReport, SourceMap } from './types';
 
-function fixSourceMap(sourceMap: SourceMap) {
+function replaceWebpackIfExists(sourceMap: SourceMap) {
   if (!sourceMap || sourceMap.sources.length === 0) {
     return undefined;
   }
@@ -29,7 +29,7 @@ export async function getSourceMap(entry: CoverageReport) {
       'base64',
     );
 
-    return fixSourceMap(JSON.parse(buffer.toString()));
+    return replaceWebpackIfExists(JSON.parse(buffer.toString()));
   }
 
   const sourceMappingURL = match.find((sourceMap) =>
@@ -40,7 +40,7 @@ export async function getSourceMap(entry: CoverageReport) {
     try {
       const response = await fetch(sourceMappingURL).then((r) => r.json());
 
-      return fixSourceMap(response);
+      return replaceWebpackIfExists(response);
     } catch (error) {
       logger.error(error);
     }
