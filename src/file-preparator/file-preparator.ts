@@ -31,6 +31,14 @@ export class FilePreparator {
       normalizedPath = normalizedPath.substring(2);
     }
 
+    if (normalizedPath.startsWith(process.cwd())) {
+      normalizedPath = normalizedPath.substring(process.cwd().length);
+    }
+
+    if (normalizedPath.startsWith('/')) {
+      normalizedPath = normalizedPath.substring(1);
+    }
+
     // Remove query params
     normalizedPath = normalizedPath.replace(/\?.*$/, '');
 

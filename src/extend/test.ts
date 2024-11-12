@@ -24,7 +24,8 @@ const extendedTest = test.extend({
 
     if (coverage) {
       await storeAffectedFiles(
-        testInfo.titlePath.join(' - '),
+        testInfo.titlePath.join(' - ').replaceAll('/', '~'),
+        testInfo.file,
         coverage,
         affectedFiles,
       );
@@ -79,6 +80,7 @@ function writeAffectedFiles(affectedFiles: AffectedFiles) {
 
 async function storeAffectedFiles(
   testName: string,
+  file: string,
   coverage: CoverageReport[],
   affectedFiles: AffectedFiles,
 ) {
@@ -97,27 +99,19 @@ async function storeAffectedFiles(
         const sourceMap = await getSourceMap(entry);
 
         if (sourceMap) {
-          const sources = sourceMap.sources
+          const sources = [...sourceMap.sources, file]
             .filter(filePreparator.outOfProjectFiles)
             .map(filePreparator.toGitComparable);
-          // TODO: This filter should be moved with the other one and not repeated down in the else
-          // .filter(removeIgnoredFiles);
+
           const files = new Set(sources);
 
           for (const source of files.values()) {
-            // Still needed?
-            const affectedFile = filePreparator.toGitComparable(source);
-
-            addAffectedFile(testName, affectedFile, affectedFiles);
+            addAffectedFile(testName, source, affectedFiles);
           }
         } else {
           // TODO: Improve how we store the name of the file
-          if (
-            // !rtcConfig.affectedIgnorePatterns.some((pattern) =>
-            //   entry.url.match(pattern),
-            // )
-            !filePreparator.ignorePatternChecker(entry.url)
-          ) {
+          // TODO: Add test file name
+          if (!filePreparator.ignorePatternChecker(entry.url)) {
             addAffectedFile(
               testName,
               entry.url.replace(rtcConfig.url + '/', ''),

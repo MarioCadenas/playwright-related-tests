@@ -15,7 +15,7 @@ async function findRelatedTests(): Promise<{
 }> {
   const impactedTestFiles = [];
   const impactedTestNames = [];
-  const { stdout } = await exec('git diff --name-only');
+  const { stdout } = await exec('git diff --name-only HEAD');
   const modifiedFiles = stdout.trim().split('\n');
   const relatedTestsFolder = path.join(process.cwd(), '.affected-files');
 
@@ -39,6 +39,7 @@ async function findRelatedTests(): Promise<{
 
     if (impacted) {
       const fileName = file.replace('.json', '').split(' - ')[0]!;
+      const exactFileName = fileName.replaceAll('~', '/');
       const exactTestName = file
         .replace('.json', '')
         .replace(fileName, '')
@@ -46,8 +47,8 @@ async function findRelatedTests(): Promise<{
         .replaceAll(' - ', ' ')
         .trim();
 
-      impactedTestFiles.push(fileName);
-      impactedTestNames.push(`${fileName} ${exactTestName}`);
+      impactedTestFiles.push(exactFileName);
+      impactedTestNames.push(`${exactFileName} ${exactTestName}`);
     }
   }
 
