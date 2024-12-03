@@ -13,8 +13,8 @@ async function findRelatedTests(): Promise<{
   impactedTestFiles: string[];
   impactedTestNames: string[];
 }> {
-  const impactedTestFiles = [];
-  const impactedTestNames = [];
+  const impactedTestFiles = new Set<string>();
+  const impactedTestNames = new Set<string>();
   const { stdout } = await exec('git diff --name-only HEAD');
   const modifiedFiles = stdout.trim().split('\n');
   const relatedTestsFolder = path.join(process.cwd(), '.affected-files');
@@ -47,16 +47,19 @@ async function findRelatedTests(): Promise<{
         .replaceAll(' - ', ' ')
         .trim();
 
-      impactedTestFiles.push(exactFileName);
-      impactedTestNames.push(`${exactFileName} ${exactTestName}`);
+      impactedTestFiles.add(exactFileName);
+      impactedTestNames.add(`${exactFileName} ${exactTestName}`);
     }
   }
 
   logger.log(`Running only impacted tests files \n
-${chalk.cyan(impactedTestFiles.join('\n\n'))}
+${chalk.cyan(Array.from(impactedTestFiles).join('\n\n'))}
 `);
 
-  return { impactedTestFiles, impactedTestNames };
+  return {
+    impactedTestFiles: Array.from(impactedTestFiles),
+    impactedTestNames: Array.from(impactedTestNames),
+  };
 }
 
 export async function getImpactedTestsRegex(): Promise<RegExp | undefined> {
