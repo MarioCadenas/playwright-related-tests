@@ -88,9 +88,6 @@ async function storeAffectedFiles(
   const rtcConfig = rtc.getConfig();
   const filePreparator = new FilePreparator(rtcConfig);
 
-  // TODO: This should be removed
-  process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
-
   return Promise.all(
     coverage.map(async (entry) => {
       if (entry.url.includes(rtcConfig.url)) {

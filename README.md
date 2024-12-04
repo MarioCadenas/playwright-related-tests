@@ -2,33 +2,9 @@
 
 ## How to use it
 
-```ts
-// global-setup.ts
-import { FullConfig } from '@playwright/test';
-import {
-  RelatedTestsConfig,
-  getImpactedTestsRegex,
-} from 'playwright-related-tests';
+### Out of the box
 
-export default async function globalSetup(config: FullConfig) {
-  RTC.RelatedTestsConfig.init({
-    url: 'http://localhost:5173',
-    affectedIgnorePatterns: ['some-js-file.js', 'some external'],
-  });
-
-  const testTitleRegex = await RTC.getImpactedTestsRegex();
-
-  if (testTitleRegex) {
-    config.grep = testTitleRegex;
-
-    config.projects.forEach((project) => {
-      project.grep = testTitleRegex;
-    });
-  }
-}
-```
-
-or
+In your global setup, modify the function to initialize the configuration and allow this package to prepare your config to run the tests it finds.
 
 ```ts
 // global-setup.ts
@@ -39,12 +15,53 @@ import {
 } from 'playwright-related-tests';
 
 export default async function globalSetup(config: FullConfig) {
-  RTC.RelatedTestsConfig.init({
+  RelatedTestsConfig.init({
     url: 'http://localhost:5173',
     exitProcess: false,
   });
 
-  await updateConfigWithImpactedTests();
+  await updateConfigWithImpactedTests(config);
+}
+```
+
+Once you have this in your global setup, simply use the `test` function from `playwright-related-tests`, as follows:
+
+```ts
+import { test, expect } from 'playwright-related-tests';
+
+test.describe('Navigation to example', () => {
+  test('should open the my view', async ({ page }) => {
+    await expect(page.getByTestId('some-element-id')).toBeVisible();
+  });
+});
+```
+
+### Customizing grep
+
+```ts
+// global-setup.ts
+import { FullConfig } from '@playwright/test';
+import {
+  RelatedTestsConfig,
+  getImpactedTestsRegex,
+} from 'playwright-related-tests';
+
+export default async function globalSetup(config: FullConfig) {
+  RelatedTestsConfig.init({
+    url: 'http://localhost:5173',
+    affectedIgnorePatterns: ['some-js-file.js', 'some external'],
+  });
+
+  const testTitleRegex = await getImpactedTestsRegex();
+
+  if (testTitleRegex) {
+    // You can decide here which projects you want to use the regex for.
+    config.grep = testTitleRegex;
+
+    config.projects.forEach((project) => {
+      project.grep = testTitleRegex;
+    });
+  }
 }
 ```
 
