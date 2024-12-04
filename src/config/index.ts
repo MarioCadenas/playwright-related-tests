@@ -1,1 +1,1 @@
-export { default as RelatedTestsConfig } from './config';
+export { default as RelatedTestsConfig, type Config } from './config';

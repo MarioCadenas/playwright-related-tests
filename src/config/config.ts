@@ -1,10 +1,11 @@
-import path from 'node:path';
 import fs from 'node:fs';
+import path from 'node:path';
 import { fileURLToPath } from 'url';
 
-interface Config {
+export interface Config {
+  affectedIgnorePatterns: string[];
   url: string;
-  assetUrlMatching: string;
+  exitProcess?: boolean;
 }
 
 const FILENAME = 'config.json';
@@ -18,13 +19,15 @@ function getConfigFile() {
 }
 
 const CONFIG_FILE = getConfigFile();
+const DEFAULT_CONFIG: Config = {
+  url: '',
+  exitProcess: true,
+  affectedIgnorePatterns: [],
+};
 
 export default class RelatedTestsConfig {
   static #instance: RelatedTestsConfig;
-  private config: Config = {
-    url: '',
-    assetUrlMatching: '',
-  };
+  private config = DEFAULT_CONFIG;
   private loaded: boolean;
 
   private constructor() {
@@ -41,7 +44,7 @@ export default class RelatedTestsConfig {
   }
 
   public static init(config: Config): RelatedTestsConfig {
-    RelatedTestsConfig.instance.config = config;
+    RelatedTestsConfig.instance.config = Object.assign(DEFAULT_CONFIG, config);
 
     RelatedTestsConfig.#instance.saveToDisk();
 
@@ -58,9 +61,7 @@ export default class RelatedTestsConfig {
     }
 
     if (!fs.existsSync(CONFIG_FILE)) {
-      return {
-        url: '',
-      };
+      return DEFAULT_CONFIG;
     }
 
     return JSON.parse(fs.readFileSync(CONFIG_FILE).toString());
