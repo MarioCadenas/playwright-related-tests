@@ -3,8 +3,18 @@ import path from 'node:path';
 import { fileURLToPath } from 'url';
 
 export interface Config {
+  /**
+   * List of patterns to ignore when looking for related tests
+   */
   affectedIgnorePatterns: string[];
+  /**
+   * The URL where the files are hosted. This can differ from the local to staging or production.
+   */
   url: string;
+  /**
+   * Whether to exit the process after running the extension. For example, if no tests are found and exitProcess is true, the process will exit.
+   * This is useful for CI/CD pipelines in the pull request stage.
+   */
   exitProcess?: boolean;
 }
 
