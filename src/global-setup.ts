@@ -1,4 +1,4 @@
-import type { FullConfig } from '@playwright/test';
+import { type FullConfig } from '@playwright/test';
 import chalk from 'chalk';
 import { exec as syncExec } from 'node:child_process';
 import fs from 'node:fs';

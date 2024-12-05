@@ -11,8 +11,9 @@ type AffectedFiles = Map<string, Set<string>>;
 
 const AFFECTED_FILES_FOLDER = '.affected-files';
 
-const extendedTest = test.extend({
-  page: async ({ page }, use) => {
+/** @internal */
+const extendedTest = test.extend<{ page: Page }>({
+  page: async ({ page }, use: (r: Page) => Promise<void>) => {
     const affectedFiles: AffectedFiles = new Map();
     const testInfo = await test.info();
 
@@ -48,6 +49,7 @@ async function safeCoverageMethod<T extends keyof Coverage>(
 }
 
 export { extendedTest as test };
+/** @internal */
 export const expect = extendedTest.expect;
 
 function addAffectedFile(

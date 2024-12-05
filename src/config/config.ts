@@ -2,6 +2,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'url';
 
+/**
+ * @expand
+ * @interface Config
+ * */
 export interface Config {
   /**
    * List of patterns to ignore when looking for related tests
@@ -37,7 +41,7 @@ const DEFAULT_CONFIG: Config = {
 
 export default class RelatedTestsConfig {
   static #instance: RelatedTestsConfig;
-  private config = DEFAULT_CONFIG;
+  private config: Config = DEFAULT_CONFIG;
   private loaded: boolean;
 
   private constructor() {
@@ -77,7 +81,7 @@ export default class RelatedTestsConfig {
     return JSON.parse(fs.readFileSync(CONFIG_FILE).toString());
   }
 
-  public getConfig() {
+  public getConfig(): Config {
     return this.config;
   }
 }

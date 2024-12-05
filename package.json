@@ -20,6 +20,7 @@
   ],
   "scripts": {
     "build": "tsup",
+    "docs:build": "typedoc src/index.ts --excludeExternals --excludeInternal --entryPointStrategy Expand",
     "ci:build": "npm run build && npm run lint && npm run check-exports && npm run test",
     "check-exports": "attw --pack .",
     "lint": "prettier --check . && tsc",
@@ -38,6 +39,7 @@
     "@types/node": "^22.5.5",
     "prettier": "^3.3.3",
     "tsup": "^8.3.0",
+    "typedoc": "^0.27.3",
     "typescript": "^5.6.2",
     "vitest": "^2.1.1"
   },
