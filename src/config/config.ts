@@ -12,7 +12,7 @@ export interface Config {
    */
   affectedIgnorePatterns: string[];
   /**
-   * The URL where the files are hosted. This can differ from the local to staging or production.
+   * The URL where the files are hosted. This can differ from the local to staging or production environment.
    */
   url: string;
   /**

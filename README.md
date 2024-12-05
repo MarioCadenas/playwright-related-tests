@@ -1,8 +1,30 @@
 # Playwright Related Tests
 
+## Install
+
+```bash
+npm install playwright-related-tests
+```
+
 ## How to use it
 
-### Out of the box
+### Replace your test function
+
+Simply use the `test` function from `playwright-related-tests`, as follows:
+
+```ts
+import { test, expect } from 'playwright-related-tests';
+
+test.describe('Navigation to example', () => {
+  test('should open the my view', async ({ page }) => {
+    await expect(page.getByTestId('some-element-id')).toBeVisible();
+  });
+});
+```
+
+The expect function is also exported so you can use import it from the package as well.
+
+### Making it work out of the box
 
 In your global setup, modify the function to initialize the configuration and allow this package to prepare your config to run the tests it finds.
 
@@ -22,18 +44,6 @@ export default async function globalSetup(config: FullConfig) {
 
   await updateConfigWithImpactedTests(config);
 }
-```
-
-Once you have this in your global setup, simply use the `test` function from `playwright-related-tests`, as follows:
-
-```ts
-import { test, expect } from 'playwright-related-tests';
-
-test.describe('Navigation to example', () => {
-  test('should open the my view', async ({ page }) => {
-    await expect(page.getByTestId('some-element-id')).toBeVisible();
-  });
-});
 ```
 
 ### Customizing grep
