@@ -93,3 +93,4 @@ TODO
 - [ ] Allow passing a flag to only run affected tests so it can be run on PR and then skip this on master
 - [ ] Make a relation to files that are imported into the test file too
 - [ ] Document usage properly
+- [ ] Add S3/R2 connector logic
