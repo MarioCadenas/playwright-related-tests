@@ -25,15 +25,15 @@
     "check-exports": "attw --pack .",
     "lint": "prettier --check . && tsc",
     "lint:fix": "prettier --write .",
-    "local-release": "changeset version && changeset publish",
-    "prepublishOnly": "npm run ci",
+    "release": "changeset version && changeset publish",
+    "prepublishOnly": "npm run ci:build",
     "test": "vitest run"
   },
   "author": "Mario Cadenas",
   "license": "The Clear BSD License",
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.16.4",
-    "@changesets/cli": "^2.27.8",
+    "@changesets/cli": "^2.27.11",
     "@playwright/test": "^1.47.2",
     "@types/isomorphic-fetch": "^0.0.39",
     "@types/node": "^22.5.5",
