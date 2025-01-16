@@ -2,8 +2,10 @@
   "name": "playwright-related-tests",
   "version": "1.0.0",
   "description": "Run only tests that are related to your changes",
-  "private": "true",
   "main": "dist/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     "./package.json": "./package.json",
     ".": {
