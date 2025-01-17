@@ -1,11 +1,12 @@
 {
   "name": "playwright-related-tests",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MarioCadenas/playwright-related-tests.git"
+  },
   "version": "1.0.0",
   "description": "Run only tests that are related to your changes",
   "main": "dist/index.js",
-  "publishConfig": {
-    "access": "public"
-  },
   "exports": {
     "./package.json": "./package.json",
     ".": {
@@ -16,6 +17,22 @@
   "files": [
     "dist"
   ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "lint-staged": {
+    "**/*.js": [
+      "eslint --ext .js --fix",
+      "prettier --write"
+    ],
+    "**/*.ts": [
+      "eslint --ext .ts --fix",
+      "prettier --write"
+    ]
+  },
   "keywords": [
     "playwright",
     "related-tests"
@@ -27,7 +44,6 @@
     "check-exports": "attw --pack .",
     "lint": "prettier --check . && tsc",
     "lint:fix": "prettier --write .",
-    "release": "changeset version && changeset publish",
     "prepublishOnly": "npm run ci:build",
     "test": "vitest run"
   },
@@ -36,9 +52,17 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.16.4",
     "@changesets/cli": "^2.27.11",
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0",
     "@playwright/test": "^1.47.2",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.1",
+    "@semantic-release/npm": "^12.0.1",
     "@types/isomorphic-fetch": "^0.0.39",
     "@types/node": "^22.5.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.1",
     "prettier": "^3.3.3",
     "tsup": "^8.3.0",
     "typedoc": "^0.27.3",
