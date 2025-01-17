@@ -1,10 +1,7 @@
-name: Build
+name: PR Build
 
 on:
   pull_request:
-  push:
-    branches:
-      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
