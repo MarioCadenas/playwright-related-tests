@@ -89,7 +89,6 @@ TODO
 
 - [ ] Find out a way to allow users to filter files or expressions from their side (might need a js config file with a function).
 - [ ] Find a way to make this work when the user also wants to run using coverage.
-- [ ] Find a way to control how to update the affected files.
 - [ ] Allow passing a flag to only run affected tests so it can be run on PR and then skip this on master
 - [ ] Make a relation to files that are imported into the test file too
 - [ ] Document usage properly
