@@ -17,19 +17,11 @@
   "files": [
     "dist"
   ],
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged",
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-    }
-  },
   "lint-staged": {
     "**/*.js": [
-      "eslint --ext .js --fix",
       "prettier --write"
     ],
     "**/*.ts": [
-      "eslint --ext .ts --fix",
       "prettier --write"
     ]
   },
@@ -45,7 +37,8 @@
     "lint": "prettier --check . && tsc",
     "lint:fix": "prettier --write .",
     "prepublishOnly": "npm run ci:build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepare": "husky"
   },
   "author": "Mario Cadenas",
   "license": "The Clear BSD License",
