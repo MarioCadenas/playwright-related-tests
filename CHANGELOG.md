@@ -1,3 +1,11 @@
+## [1.0.2](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.0.1...v1.0.2) (2025-01-20)
+
+
+### Bug Fixes
+
+* Remove changesets ([10ef328](https://github.com/MarioCadenas/playwright-related-tests/commit/10ef3281591a6bf04c05ce1a6e3956ce8c562636))
+* Remove unnecesary awaits ([eff8f01](https://github.com/MarioCadenas/playwright-related-tests/commit/eff8f01a4cdefe43beaf1b203354b17ede68dc26))
+
 # 1.0.0 (2025-01-20)
 
 
