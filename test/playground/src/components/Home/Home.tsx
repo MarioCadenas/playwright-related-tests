@@ -1,14 +1,14 @@
-import Counter from "../Counter/Counter";
+import Counter from '../Counter/Counter';
 import homeIcon from '../../assets/images/home.png';
 
-const Home = () =>{
+const Home = () => {
   return (
     <>
-    	<img src={homeIcon} alt='profile' style={{width: '200px'}}/>
+      <img src={homeIcon} alt="profile" style={{ width: '200px' }} />
       <h1>Home Page</h1>
-      <Counter/>
+      <Counter />
     </>
-  )
+  );
 };
 
 export default Home;
