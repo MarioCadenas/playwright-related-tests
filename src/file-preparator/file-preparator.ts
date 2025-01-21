@@ -11,7 +11,7 @@ export class FilePreparator {
   }
 
   ignorePatternChecker(value: string): boolean {
-    return this.config.affectedIgnorePatterns.some((pattern) =>
+    return (this.config.affectedIgnorePatterns || []).some((pattern) =>
       value.match(pattern),
     );
   }

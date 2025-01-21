@@ -16,6 +16,9 @@ class ConsoleLogger {
   log(message?: any, ...optionalParams: any[]): void {
     console.log(`${chalk.cyan(SIGNATURE)}: ${message} ${optionalParams}`);
   }
+  warn(message?: any, ...optionalParams: any[]): void {
+    console.log(`${chalk.yellow(SIGNATURE)}: ${message} ${optionalParams}`);
+  }
   error(message?: any, ...optionalParams: any[]): void {
     console.error(`${chalk.red(SIGNATURE)}: ${message} ${optionalParams}`);
   }
