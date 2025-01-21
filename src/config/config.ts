@@ -10,7 +10,7 @@ export interface Config {
   /**
    * List of patterns to ignore when looking for related tests
    */
-  affectedIgnorePatterns: string[];
+  affectedIgnorePatterns?: string[];
   /**
    * The URL where the files are hosted. This can differ from the local to staging or production environment.
    */
