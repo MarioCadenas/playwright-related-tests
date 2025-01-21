@@ -38,6 +38,7 @@
     "lint:fix": "prettier --write .",
     "prepublishOnly": "npm run ci:build",
     "test": "vitest run",
+    "playground:setup": "npm i --prefix ./test/playground",
     "prepare": "husky"
   },
   "author": "Mario Cadenas",
