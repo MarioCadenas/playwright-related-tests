@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'url';
+import type { BaseConnector } from '../connectors/base';
+import type { RelationshipType } from '../types';
 
 /**
  * @expand
@@ -10,7 +12,7 @@ export interface Config {
   /**
    * List of patterns to ignore when looking for related tests
    */
-  affectedIgnorePatterns: string[];
+  affectedIgnorePatterns?: string[];
   /**
    * The URL where the files are hosted. This can differ from the local to staging or production environment.
    */
@@ -39,13 +41,23 @@ const DEFAULT_CONFIG: Config = {
   affectedIgnorePatterns: [],
 };
 
+interface Connectors {
+  local: BaseConnector[];
+  remote: BaseConnector[];
+}
+
 export default class RelatedTestsConfig {
   static #instance: RelatedTestsConfig;
   private config: Config = DEFAULT_CONFIG;
+  private connectors: Connectors;
   private loaded: boolean;
 
   private constructor() {
     this.config = this.loadFromDisk();
+    this.connectors = {
+      local: [],
+      remote: [],
+    };
     this.loaded = true;
   }
 
@@ -57,8 +69,12 @@ export default class RelatedTestsConfig {
     return RelatedTestsConfig.#instance;
   }
 
-  public static init(config: Config): RelatedTestsConfig {
+  public static init(
+    config: Config,
+    connectors: Connectors,
+  ): RelatedTestsConfig {
     RelatedTestsConfig.instance.config = Object.assign(DEFAULT_CONFIG, config);
+    RelatedTestsConfig.instance.connectors = connectors;
 
     RelatedTestsConfig.#instance.saveToDisk();
 
@@ -83,5 +99,12 @@ export default class RelatedTestsConfig {
 
   public getConfig(): Config {
     return this.config;
+  }
+
+  // This should be somewhere else, maybe in the file manager class
+  public syncRemote(type: RelationshipType) {
+    return Promise.all(
+      this.connectors.remote.map((connector) => connector.sync()),
+    );
   }
 }

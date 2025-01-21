@@ -4,3 +4,4 @@ export {
   getImpactedTestsRegex,
   updateConfigWithImpactedTests,
 } from './global-setup';
+export { syncRemoteFiles } from './global-teardown';
