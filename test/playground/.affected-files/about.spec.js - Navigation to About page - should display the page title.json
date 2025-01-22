@@ -1,0 +1,8 @@
+[
+  "test/playground/src/main.tsx",
+  "test/playground/src/index.css",
+  "test/playground/src/App.tsx",
+  "test/playground/src/components/About/index.tsx",
+  "test/playground/src/components/About/About.tsx",
+  "test/playground/src/assets/images/about.png?import"
+]
