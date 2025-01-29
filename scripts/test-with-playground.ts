@@ -7,9 +7,6 @@ import { promisify } from 'node:util';
 
 const exec = promisify(syncExec);
 
-// Commit the changes
-await exec('git add . && git commit -m "feat: add new feature"');
-
 // Make changes to a component that is used in the E2E tests
 const filePath = 'test/playground/src/components/Home/Home.tsx';
 const file = fs.readFileSync(filePath, 'utf8').toString();
@@ -19,9 +16,6 @@ fs.writeFileSync(filePath, changedFile, 'utf8');
 // Run the E2E test and check how only the home.spec.js is executed
 const { stdout: e2eResult } = await exec('cd test/playground && npm run e2e');
 console.log(e2eResult);
-
-// Uncommit/Reset the changes with `git reset --hard HEAD~1`
-await exec('git reset HEAD~1');
 
 // Restore the modified .affected-files and the component that was modified
 const affectedFilesDir = 'test/playground/.affected-files';
