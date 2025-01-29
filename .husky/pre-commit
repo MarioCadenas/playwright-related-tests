@@ -1,1 +1,7 @@
+echo "Running pre-commit hook"
+PROTECTED_DIR="test/playground/.affected-files"
+if git diff --cached --name-only | grep -q "^$PROTECTED_DIR"; then
+  echo "Error: Files in the $PROTECTED_DIR directory cannot be modified."
+  exit 1
+fi
 lint-staged
