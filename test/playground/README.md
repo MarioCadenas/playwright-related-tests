@@ -17,4 +17,3 @@ Start the dev server by running `npm run dev`, make some changes to any of the c
 # Quick way of testing new changes made to the library
 
 In the root dir (`cd ../..`) you could also run `npm run playground:test` which will run a script that modifies the `Home.tsx` component which is included in one of the files in `.affected-files`, and then runs the E2E, resulting in only the `home.spec.js` test being executed.
-
