@@ -23,6 +23,7 @@ class ConsoleLogger {
     console.error(`${chalk.red(SIGNATURE)}: ${message} ${optionalParams}`);
   }
   debug(message?: any, ...optionalParams: any[]): void {
+    // this should be hidden if no DEBUG value is set.
     console.debug(`${chalk.blue(SIGNATURE)}: ${message} ${optionalParams}`);
   }
 }
