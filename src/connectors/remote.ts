@@ -1,4 +1,5 @@
 import { RemoteConnector } from './base';
+import type { RelationshipType } from '../types';
 
 export type TRemoteConnector = typeof S3Connector;
 
@@ -13,8 +14,11 @@ export class S3Connector extends RemoteConnector {
     return Promise.resolve('/path/to/file');
   }
 
-  upload(folder: string): Promise<void> {
+  async upload(type: RelationshipType, folder: string): Promise<void> {
     // create tar or zip from folder and upload it.
+
+    // fake upload
+    await new Promise((r) => setTimeout(r, 5000));
 
     return Promise.resolve(undefined);
   }

@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import { logger } from '../logger';
 import { LocalFileSystemConnector, S3Connector } from '../connectors';
 import { AFFECTED_FILES_FOLDER } from '../constants';
+import type { RelationshipType } from '../types';
 
 export class RelationshipManager {
   private impactedTestFiles: Set<string>;
@@ -74,7 +75,7 @@ export class RelationshipManager {
     const impactedTestNames = Array.from(this.impactedTestNames);
 
     // TODO: improve this log
-    logger.log(`Running only impacted tests files \n
+    logger.debug(`Running only impacted tests files \n
 ${chalk.cyan(Array.from(impactedTestFiles).join('\n\n'))}
 `);
 
@@ -94,7 +95,13 @@ ${chalk.cyan(Array.from(impactedTestFiles).join('\n\n'))}
     await this.syncLocal(downloadPath);
   }
 
-  async upsync() {
-    await this.connectors.remote.upload(this.connectors.local.getFolder());
+  async upsync(type: RelationshipType) {
+    logger.debug(
+      `Synchronizing relationship files to remote for type: ${type}`,
+    );
+    await this.connectors.remote.upload(
+      type,
+      this.connectors.local.getFolder(),
+    );
   }
 }
