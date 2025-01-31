@@ -1,4 +1,5 @@
 {
+  "exclude": ["test"],
   "compilerOptions": {
     /* Base Options: */
     "esModuleInterop": true,
