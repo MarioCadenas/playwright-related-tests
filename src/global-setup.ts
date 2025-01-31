@@ -4,11 +4,15 @@ import { promisify } from 'node:util';
 import { RelatedTestsConfig } from './config';
 import { logger } from './logger';
 import { RelationshipManager } from './relationship';
-import { S3Connector } from './connectors';
+import { S3Connector, type TRemoteConnector } from './connectors';
+import type { Constructor } from './types';
 
 const exec = promisify(syncExec);
 
-async function findRelatedTests(): Promise<{
+async function findRelatedTests(
+  remoteConnector: Constructor<TRemoteConnector>,
+  fromRemotePath: string,
+): Promise<{
   impactedTestFiles: string[];
   impactedTestNames: string[];
 }> {
@@ -16,16 +20,22 @@ async function findRelatedTests(): Promise<{
   const modifiedFiles = stdout.trim().split('\n');
   const relationShipManager = new RelationshipManager(
     modifiedFiles,
-    S3Connector,
+    remoteConnector,
   );
 
-  await relationShipManager.init();
+  await relationShipManager.init({ fromRemotePath });
 
   return relationShipManager.extractRelationships();
 }
 
-export async function getImpactedTestsRegex(): Promise<RegExp | undefined> {
-  const { impactedTestNames } = await findRelatedTests();
+export async function getImpactedTestsRegex(
+  remoteConnector: Constructor<TRemoteConnector> = S3Connector,
+  fromRemotePath: string,
+): Promise<RegExp | undefined> {
+  const { impactedTestNames } = await findRelatedTests(
+    remoteConnector,
+    fromRemotePath,
+  );
 
   if (impactedTestNames.length === 0) {
     logger.debug(`No tests impacted by changes`);
@@ -51,8 +61,10 @@ ${testTitleRegex}
 
 export async function updateConfigWithImpactedTests(
   config: FullConfig,
+  fromRemotePath: string,
+  remoteConnector: Constructor<TRemoteConnector> = S3Connector,
 ): Promise<void> {
-  const regex = await getImpactedTestsRegex();
+  const regex = await getImpactedTestsRegex(remoteConnector, fromRemotePath);
 
   if (regex) {
     config.grep = regex;

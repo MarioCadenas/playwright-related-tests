@@ -1,18 +1,31 @@
 import chalk from 'chalk';
 import { logger } from '../logger';
-import { LocalFileSystemConnector, S3Connector } from '../connectors';
-import { AFFECTED_FILES_FOLDER } from '../constants';
-import type { RelationshipType } from '../types';
+import { LocalFileSystemConnector, type TRemoteConnector } from '../connectors';
+import { AFFECTED_FILES_FOLDER, RELATIONSHIP_TYPES } from '../constants';
+import type { RelationshipType, Constructor } from '../types';
 
-export class RelationshipManager {
+interface InitSkipOptions {
+  skipDownload: true;
+}
+
+interface InitOptions {
+  skipDownload?: false;
+  type?: RelationshipType;
+  fromRemotePath: string;
+}
+
+export class RelationshipManager<T extends TRemoteConnector> {
   private impactedTestFiles: Set<string>;
   private impactedTestNames: Set<string>;
   private modifiedFiles: string[];
-  private connectors: { local: LocalFileSystemConnector; remote: S3Connector };
+  private connectors: {
+    local: LocalFileSystemConnector;
+    remote: TRemoteConnector;
+  };
 
   constructor(
     currentlyChangedFiles: string[],
-    RemoteConnector: typeof S3Connector,
+    RemoteConnector: Constructor<T>,
   ) {
     this.impactedTestFiles = new Set<string>();
     this.impactedTestNames = new Set<string>();
@@ -30,10 +43,12 @@ export class RelationshipManager {
     this.connectors.local.init();
   }
 
-  async init({ skipDownload } = { skipDownload: false }) {
-    if (skipDownload) return;
+  async init(options: InitSkipOptions | InitOptions) {
+    if (options.skipDownload) return;
 
-    await this.download();
+    const { type = RELATIONSHIP_TYPES.MAIN, fromRemotePath } = options;
+
+    await this.download(type, fromRemotePath);
   }
 
   private collectAffectedFiles() {
@@ -89,19 +104,22 @@ ${chalk.cyan(Array.from(impactedTestFiles).join('\n\n'))}
     await this.connectors.local.sync(filesPath);
   }
 
-  async download() {
-    const downloadPath = await this.connectors.remote.download();
+  async download(type: RelationshipType, fromPath: string) {
+    const downloadPath = await this.connectors.remote.download(type, fromPath);
+
+    if (!downloadPath) return;
 
     await this.syncLocal(downloadPath);
   }
 
-  async upsync(type: RelationshipType) {
+  async upsync(type: RelationshipType, destination: string) {
     logger.debug(
       `Synchronizing relationship files to remote for type: ${type}`,
     );
     await this.connectors.remote.upload(
       type,
       this.connectors.local.getFolder(),
+      destination,
     );
   }
 }
