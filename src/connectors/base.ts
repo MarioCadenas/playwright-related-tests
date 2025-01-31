@@ -16,7 +16,14 @@ export abstract class LocalConnector extends BaseConnector {
 }
 
 export abstract class RemoteConnector extends BaseConnector {
-  abstract download(): Promise<string>;
+  abstract download(
+    type: RelationshipType,
+    fromPath: string,
+  ): Promise<string | null>;
 
-  abstract upload(type: RelationshipType, folder: string): Promise<void>;
+  abstract upload(
+    type: RelationshipType,
+    folder: string,
+    destination: string,
+  ): Promise<void>;
 }

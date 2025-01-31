@@ -54,6 +54,8 @@ export class LocalFileSystemConnector extends LocalConnector {
   }
 
   addRelationship(testName: string, fileName: string) {
+    if (fileName.length === 0) return;
+
     if (this.affectedFiles.has(testName)) {
       this.affectedFiles.get(testName)?.add(fileName);
     } else {

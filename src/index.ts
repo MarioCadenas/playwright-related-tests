@@ -5,3 +5,4 @@ export {
   updateConfigWithImpactedTests,
 } from './global-setup';
 export { upSyncToRemote } from './global-teardown';
+export { RemoteConnector } from './connectors';
