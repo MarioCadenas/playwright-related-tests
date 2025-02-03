@@ -1,69 +1,45 @@
 import { type FullConfig } from '@playwright/test';
-import chalk from 'chalk';
 import { exec as syncExec } from 'node:child_process';
-import fs from 'node:fs';
-import path from 'node:path';
 import { promisify } from 'node:util';
 import { RelatedTestsConfig } from './config';
 import { logger } from './logger';
+import { RelationshipManager } from './relationship';
+import { S3Connector, type TRemoteConnector } from './connectors';
+import type { Constructor } from './types';
 
 const exec = promisify(syncExec);
 
-async function findRelatedTests(): Promise<{
+async function findRelatedTests(
+  fromRemotePath?: string,
+  remoteConnector: Constructor<TRemoteConnector> | undefined = fromRemotePath
+    ? S3Connector
+    : undefined,
+): Promise<{
   impactedTestFiles: string[];
   impactedTestNames: string[];
 }> {
-  const impactedTestFiles = new Set<string>();
-  const impactedTestNames = new Set<string>();
   const { stdout } = await exec('git diff --name-only HEAD');
   const modifiedFiles = stdout.trim().split('\n');
-  const relatedTestsFolder = path.join(process.cwd(), '.affected-files');
+  const relationShipManager = new RelationshipManager(
+    modifiedFiles,
+    remoteConnector,
+  );
 
-  if (!fs.existsSync(relatedTestsFolder)) {
-    return {
-      impactedTestFiles: [],
-      impactedTestNames: [],
-    };
-  }
+  await relationShipManager.init({ fromRemotePath });
 
-  const files = fs.readdirSync(relatedTestsFolder);
-
-  for (const file of files) {
-    const affected = fs.readFileSync(
-      path.join(process.cwd(), '.affected-files', file),
-      'utf-8',
-    );
-    const affectedFiles: string[] = JSON.parse(affected);
-
-    const impacted = affectedFiles.some((f) => modifiedFiles.includes(f));
-
-    if (impacted) {
-      const fileName = file.replace('.json', '').split(' - ')[0]!;
-      const exactFileName = fileName.replaceAll('~', '/');
-      const exactTestName = file
-        .replace('.json', '')
-        .replace(fileName, '')
-        .replace(' - ', '')
-        .replaceAll(' - ', ' ')
-        .trim();
-
-      impactedTestFiles.add(exactFileName);
-      impactedTestNames.add(`${exactFileName} ${exactTestName}`);
-    }
-  }
-
-  logger.log(`Running only impacted tests files \n
-${chalk.cyan(Array.from(impactedTestFiles).join('\n\n'))}
-`);
-
-  return {
-    impactedTestFiles: Array.from(impactedTestFiles),
-    impactedTestNames: Array.from(impactedTestNames),
-  };
+  return relationShipManager.extractRelationships();
 }
 
-export async function getImpactedTestsRegex(): Promise<RegExp | undefined> {
-  const { impactedTestNames } = await findRelatedTests();
+export async function getImpactedTestsRegex(
+  fromRemotePath?: string,
+  remoteConnector: Constructor<TRemoteConnector> | undefined = fromRemotePath
+    ? S3Connector
+    : undefined,
+): Promise<RegExp | undefined> {
+  const { impactedTestNames } = await findRelatedTests(
+    fromRemotePath,
+    remoteConnector,
+  );
 
   if (impactedTestNames.length === 0) {
     logger.debug(`No tests impacted by changes`);
@@ -89,8 +65,12 @@ ${testTitleRegex}
 
 export async function updateConfigWithImpactedTests(
   config: FullConfig,
+  fromRemotePath?: string,
+  remoteConnector: Constructor<TRemoteConnector> | undefined = fromRemotePath
+    ? S3Connector
+    : undefined,
 ): Promise<void> {
-  const regex = await getImpactedTestsRegex();
+  const regex = await getImpactedTestsRegex(fromRemotePath, remoteConnector);
 
   if (regex) {
     config.grep = regex;
