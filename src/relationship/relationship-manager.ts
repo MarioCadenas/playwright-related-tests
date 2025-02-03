@@ -12,6 +12,7 @@ interface InitOptions {
   skipDownload?: false;
   type?: RelationshipType;
   fromRemotePath?: string;
+  headers?: Record<string, string>;
 }
 
 export class RelationshipManager<T extends TRemoteConnector> {
@@ -46,10 +47,10 @@ export class RelationshipManager<T extends TRemoteConnector> {
   async init(options: InitSkipOptions | InitOptions) {
     if (options.skipDownload) return;
 
-    const { type = RELATIONSHIP_TYPES.MAIN, fromRemotePath } = options;
+    const { type = RELATIONSHIP_TYPES.MAIN, fromRemotePath, headers } = options;
 
     if (fromRemotePath) {
-      await this.download(type, fromRemotePath);
+      await this.download(type, fromRemotePath, headers);
     }
   }
 
@@ -106,8 +107,16 @@ ${chalk.cyan(Array.from(impactedTestFiles).join('\n\n'))}
     await this.connectors.local.sync(filesPath);
   }
 
-  async download(type: RelationshipType, fromPath: string) {
-    const downloadPath = await this.connectors.remote?.download(type, fromPath);
+  async download(
+    type: RelationshipType,
+    fromPath: string,
+    headers?: Record<string, string>,
+  ) {
+    const downloadPath = await this.connectors.remote?.download(
+      type,
+      fromPath,
+      headers,
+    );
 
     if (!downloadPath) return;
 

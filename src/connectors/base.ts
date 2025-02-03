@@ -19,6 +19,7 @@ export abstract class RemoteConnector extends BaseConnector {
   abstract download(
     type: RelationshipType,
     fromPath: string,
+    headers?: Record<string, string>,
   ): Promise<string | null>;
 
   abstract upload(
