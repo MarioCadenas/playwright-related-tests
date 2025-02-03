@@ -78,13 +78,14 @@ async function storeAffectedFiles(
             localConnector.addRelationship(testName, source);
           }
         } else {
-          // TODO: Improve how we store the name of the file
-          // TODO: Add test file name
-          if (!filePreparator.ignorePatternChecker(entry.url)) {
-            localConnector.addRelationship(
-              testName,
+          if (filePreparator.outOfProjectFiles(entry.url)) {
+            const preparedFile = filePreparator.toGitComparable(
               entry.url.replace(rtcConfig.url + '/', ''),
             );
+            const preparedTestFile = filePreparator.toGitComparable(file);
+
+            localConnector.addRelationship(testName, preparedFile);
+            localConnector.addRelationship(testName, preparedTestFile);
           }
         }
       }

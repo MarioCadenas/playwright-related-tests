@@ -4,11 +4,17 @@ import { promisify } from 'node:util';
 import { RelatedTestsConfig } from './config';
 import { logger } from './logger';
 import { RelationshipManager } from './relationship';
-import { S3Connector } from './connectors';
+import { S3Connector, type TRemoteConnector } from './connectors';
+import type { Constructor } from './types';
 
 const exec = promisify(syncExec);
 
-async function findRelatedTests(): Promise<{
+async function findRelatedTests(
+  fromRemotePath?: string,
+  remoteConnector: Constructor<TRemoteConnector> | undefined = fromRemotePath
+    ? S3Connector
+    : undefined,
+): Promise<{
   impactedTestFiles: string[];
   impactedTestNames: string[];
 }> {
@@ -16,16 +22,24 @@ async function findRelatedTests(): Promise<{
   const modifiedFiles = stdout.trim().split('\n');
   const relationShipManager = new RelationshipManager(
     modifiedFiles,
-    S3Connector,
+    remoteConnector,
   );
 
-  await relationShipManager.init();
+  await relationShipManager.init({ fromRemotePath });
 
   return relationShipManager.extractRelationships();
 }
 
-export async function getImpactedTestsRegex(): Promise<RegExp | undefined> {
-  const { impactedTestNames } = await findRelatedTests();
+export async function getImpactedTestsRegex(
+  fromRemotePath?: string,
+  remoteConnector: Constructor<TRemoteConnector> | undefined = fromRemotePath
+    ? S3Connector
+    : undefined,
+): Promise<RegExp | undefined> {
+  const { impactedTestNames } = await findRelatedTests(
+    fromRemotePath,
+    remoteConnector,
+  );
 
   if (impactedTestNames.length === 0) {
     logger.debug(`No tests impacted by changes`);
@@ -51,8 +65,12 @@ ${testTitleRegex}
 
 export async function updateConfigWithImpactedTests(
   config: FullConfig,
+  fromRemotePath?: string,
+  remoteConnector: Constructor<TRemoteConnector> | undefined = fromRemotePath
+    ? S3Connector
+    : undefined,
 ): Promise<void> {
-  const regex = await getImpactedTestsRegex();
+  const regex = await getImpactedTestsRegex(fromRemotePath, remoteConnector);
 
   if (regex) {
     config.grep = regex;

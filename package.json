@@ -69,6 +69,9 @@
   },
   "type": "module",
   "dependencies": {
-    "isomorphic-fetch": "^3.0.0"
+    "@aws-sdk/client-s3": "^3.738.0",
+    "@aws-sdk/lib-storage": "^3.738.0",
+    "isomorphic-fetch": "^3.0.0",
+    "tar": "^7.4.3"
   }
 }

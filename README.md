@@ -26,7 +26,8 @@ The expect function is also exported so you can use import it from the package a
 
 ### Making it work out of the box
 
-In your global setup, modify the function to initialize the configuration and allow this package to prepare your config to run the tests it finds.
+In your global setup, modify the function to initialize the configuration and allow this package to prepare your config
+to run the tests it finds.
 
 ```ts
 // global-setup.ts
@@ -42,7 +43,7 @@ export default async function globalSetup(config: FullConfig) {
     exitProcess: false,
   });
 
-  await updateConfigWithImpactedTests(config);
+  await updateConfigWithImpactedTests(config, 'your-path-to-remote');
 }
 ```
 
@@ -75,20 +76,67 @@ export default async function globalSetup(config: FullConfig) {
 }
 ```
 
+```ts
+// global-teardown.ts
+import { upSyncToRemote } from 'playwright-related-tests';
+
+export default async function globalTeardown() {
+  // if using s3, `your-path-to-remote` will be the folder in the bucket.
+  await upSyncToRemote('main', 'your-path-to-remote');
+}
+```
+
+## Functions and classes
+
+### updateConfigWithImpactedTests
+
+This function allows you to synchronize the files from the remote of your choice. By default it uses the S3 connector,
+but you can provide the connector of your choice.
+
+The second argument is the path were the file will be found. In s3 for example, it will be the folder in the bucket.
+
+The last argument is the connector, by default is the S3 connector.
+
+### upSyncToRemote
+
+This function allows you to synchronize the files to the remote of your choice. By default it uses the S3 connector, but
+you can provide the connector of your choice.
+The first argument is the type of relationship, by default is main, but commits will be supported in the future.
+
+The second argument is the path were the file will be uploaded. In s3 for example, it will be the folder in the bucket.
+
+The last argument is the connector, by default is the S3 connector.
+
+## Connectors
+
+### S3
+
+This connector allows you to synchronize your files into an s3 bucket.
+
+It allows downloading and uploading, but for this, it will need a few env vars in order to work.
+
+- AWS_REGION - The region of your bucket
+- AWS_ACCESS_KEY_ID - The access key id
+- AWS_ACCESS_KEY_SECRET - The secret key to access the bucket
+- AWS_BUCKET_NAME - The name of the bucket
+
+If all of this is set, you can use the `upSyncToRemote` in your global-teardown to upload the files to the bucket.
+
+```ts
+
 ## First run
 
-Once you have this setup already done, all the tests need to run so the package can collect all the files that are related to each test. Once it finishes, you should see a new folder called `.affected-files` with a list of `.json` files. Each of these files contains an array of files that are related to each test. If you find expressions or files that are not part of your code, you can ignore them using the `affectedIgnorePatterns` in the config.
+Once the setup is done, this will need a first run against the main/master branch so it can get the relationships between the tests and the files.
+From that point, new PRs or the local environment will pick up the changes that are in a remote (like S3), and use those files to compare the changes.
 
-This folder is meant to be commited to your repository, so the package can calculate which tests should be run in your pull request step.
+Ideally, the `.affected-files` shouldn't be commited to the repository, but it could also be done if instead of using S3 or any other remote service,
+you wanted to keep the files in the repo. This has the tradeoff of needing to always be in sync with the master/main branch.
 
 ## How do the affected files get updated?
 
-If there are new files or removed files, those will be updated on each run. It might happen that if you don't run the tests locally, some changes to these files will be done in the CI, and you most probably will want to update the files by running the tests locally or simply getting the changes from the CI and commiting them.
+Ideally, these files will only get updated when running the full suite against master. When running on PRs they shouldn't change the main state of the files.
 
 TODO
 
-- [ ] Find out a way to allow users to filter files or expressions from their side (might need a js config file with a function).
 - [ ] Find a way to make this work when the user also wants to run using coverage.
-- [ ] Allow passing a flag to only run affected tests so it can be run on PR and then skip this on master
-- [ ] Make a relation to files that are imported into the test file too
-- [ ] Document usage properly
+```
