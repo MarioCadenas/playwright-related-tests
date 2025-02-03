@@ -11,7 +11,7 @@ interface InitSkipOptions {
 interface InitOptions {
   skipDownload?: false;
   type?: RelationshipType;
-  fromRemotePath: string;
+  fromRemotePath?: string;
 }
 
 export class RelationshipManager<T extends TRemoteConnector> {
@@ -20,12 +20,12 @@ export class RelationshipManager<T extends TRemoteConnector> {
   private modifiedFiles: string[];
   private connectors: {
     local: LocalFileSystemConnector;
-    remote: TRemoteConnector;
+    remote: TRemoteConnector | undefined;
   };
 
   constructor(
     currentlyChangedFiles: string[],
-    RemoteConnector: Constructor<T>,
+    RemoteConnector: Constructor<T> | undefined,
   ) {
     this.impactedTestFiles = new Set<string>();
     this.impactedTestNames = new Set<string>();
@@ -33,7 +33,7 @@ export class RelationshipManager<T extends TRemoteConnector> {
 
     this.connectors = {
       local: new LocalFileSystemConnector(AFFECTED_FILES_FOLDER),
-      remote: new RemoteConnector(),
+      remote: RemoteConnector ? new RemoteConnector() : undefined,
     };
 
     this._init();
@@ -48,7 +48,9 @@ export class RelationshipManager<T extends TRemoteConnector> {
 
     const { type = RELATIONSHIP_TYPES.MAIN, fromRemotePath } = options;
 
-    await this.download(type, fromRemotePath);
+    if (fromRemotePath) {
+      await this.download(type, fromRemotePath);
+    }
   }
 
   private collectAffectedFiles() {
@@ -105,7 +107,7 @@ ${chalk.cyan(Array.from(impactedTestFiles).join('\n\n'))}
   }
 
   async download(type: RelationshipType, fromPath: string) {
-    const downloadPath = await this.connectors.remote.download(type, fromPath);
+    const downloadPath = await this.connectors.remote?.download(type, fromPath);
 
     if (!downloadPath) return;
 
@@ -116,7 +118,7 @@ ${chalk.cyan(Array.from(impactedTestFiles).join('\n\n'))}
     logger.debug(
       `Synchronizing relationship files to remote for type: ${type}`,
     );
-    await this.connectors.remote.upload(
+    await this.connectors.remote?.upload(
       type,
       this.connectors.local.getFolder(),
       destination,

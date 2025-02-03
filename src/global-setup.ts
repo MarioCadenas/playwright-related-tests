@@ -10,8 +10,10 @@ import type { Constructor } from './types';
 const exec = promisify(syncExec);
 
 async function findRelatedTests(
-  remoteConnector: Constructor<TRemoteConnector>,
-  fromRemotePath: string,
+  fromRemotePath?: string,
+  remoteConnector: Constructor<TRemoteConnector> | undefined = fromRemotePath
+    ? S3Connector
+    : undefined,
 ): Promise<{
   impactedTestFiles: string[];
   impactedTestNames: string[];
@@ -29,12 +31,14 @@ async function findRelatedTests(
 }
 
 export async function getImpactedTestsRegex(
-  remoteConnector: Constructor<TRemoteConnector> = S3Connector,
-  fromRemotePath: string,
+  fromRemotePath?: string,
+  remoteConnector: Constructor<TRemoteConnector> | undefined = fromRemotePath
+    ? S3Connector
+    : undefined,
 ): Promise<RegExp | undefined> {
   const { impactedTestNames } = await findRelatedTests(
-    remoteConnector,
     fromRemotePath,
+    remoteConnector,
   );
 
   if (impactedTestNames.length === 0) {
@@ -61,10 +65,12 @@ ${testTitleRegex}
 
 export async function updateConfigWithImpactedTests(
   config: FullConfig,
-  fromRemotePath: string,
-  remoteConnector: Constructor<TRemoteConnector> = S3Connector,
+  fromRemotePath?: string,
+  remoteConnector: Constructor<TRemoteConnector> | undefined = fromRemotePath
+    ? S3Connector
+    : undefined,
 ): Promise<void> {
-  const regex = await getImpactedTestsRegex(remoteConnector, fromRemotePath);
+  const regex = await getImpactedTestsRegex(fromRemotePath, remoteConnector);
 
   if (regex) {
     config.grep = regex;

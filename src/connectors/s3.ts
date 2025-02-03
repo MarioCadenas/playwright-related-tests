@@ -14,8 +14,6 @@ import { logger } from '../logger';
 
 const pipeline = promisify(nonPromisePipeline);
 
-export type TRemoteConnector = S3Connector;
-
 export class S3Connector extends RemoteConnector {
   private s3: S3Client;
   private bucketName: string;
@@ -68,7 +66,7 @@ export class S3Connector extends RemoteConnector {
     if (!bucketName) missing.push('AWS_BUCKET_NAME');
 
     if (missing.length > 0) {
-      logger.error(
+      throw new Error(
         `Environment variables for the S3 Connector are missing. Please define ${missing.join(', ')}`,
       );
     }
