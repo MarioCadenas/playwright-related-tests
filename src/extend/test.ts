@@ -1,20 +1,14 @@
 import { test, type Coverage, type Page } from '@playwright/test';
-import fs, { mkdirSync } from 'node:fs';
-import path from 'node:path';
 import { RelatedTestsConfig } from '../config';
 import { FilePreparator } from '../file-preparator';
-import { logger } from '../logger';
 import { getSourceMap } from './source-map';
 import type { CoverageReport } from './types';
-
-type AffectedFiles = Map<string, Set<string>>;
-
-const AFFECTED_FILES_FOLDER = '.affected-files';
+import { LocalFileSystemConnector } from '../connectors';
+import { AFFECTED_FILES_FOLDER } from '../constants';
 
 /** @internal */
 const extendedTest = test.extend<{ page: Page }>({
   page: async ({ page }, use: (r: Page) => Promise<void>) => {
-    const affectedFiles: AffectedFiles = new Map();
     const testInfo = test.info();
 
     await safeCoverageMethod(page, 'startJSCoverage');
@@ -24,14 +18,18 @@ const extendedTest = test.extend<{ page: Page }>({
     const coverage = await safeCoverageMethod(page, 'stopJSCoverage');
 
     if (coverage) {
+      const localConnector = new LocalFileSystemConnector(
+        AFFECTED_FILES_FOLDER,
+      );
+
       await storeAffectedFiles(
         testInfo.titlePath.join(' - ').replaceAll('/', '~'),
         testInfo.file,
         coverage,
-        affectedFiles,
+        localConnector,
       );
 
-      writeAffectedFiles(affectedFiles);
+      localConnector.writeAffectedFiles();
     }
   },
 });
@@ -52,39 +50,11 @@ export { extendedTest as test };
 /** @internal */
 export const expect = extendedTest.expect;
 
-function addAffectedFile(
-  testName: string,
-  fileName: string,
-  affectedFiles: AffectedFiles,
-) {
-  if (affectedFiles.has(testName)) {
-    affectedFiles.get(testName)?.add(fileName);
-  } else {
-    affectedFiles.set(testName, new Set([fileName]));
-  }
-}
-
-function writeAffectedFiles(affectedFiles: AffectedFiles) {
-  if (!fs.existsSync(AFFECTED_FILES_FOLDER)) {
-    mkdirSync(AFFECTED_FILES_FOLDER, { recursive: true });
-  }
-
-  for (const [testName, files] of affectedFiles.entries()) {
-    logger.debug(
-      `Writing the following files: \n${Array.from(files.values()).join('\n')}`,
-    );
-    fs.writeFileSync(
-      path.join(AFFECTED_FILES_FOLDER, `${testName}.json`),
-      JSON.stringify(Array.from(files.values()), null, 2),
-    );
-  }
-}
-
 async function storeAffectedFiles(
   testName: string,
   file: string,
   coverage: CoverageReport[],
-  affectedFiles: AffectedFiles,
+  localConnector: LocalFileSystemConnector,
 ) {
   const rtc = RelatedTestsConfig.instance;
   const rtcConfig = rtc.getConfig();
@@ -105,17 +75,17 @@ async function storeAffectedFiles(
           const files = new Set(sources);
 
           for (const source of files.values()) {
-            addAffectedFile(testName, source, affectedFiles);
+            localConnector.addRelationship(testName, source);
           }
         } else {
-          // TODO: Improve how we store the name of the file
-          // TODO: Add test file name
-          if (!filePreparator.ignorePatternChecker(entry.url)) {
-            addAffectedFile(
-              testName,
+          if (filePreparator.outOfProjectFiles(entry.url)) {
+            const preparedFile = filePreparator.toGitComparable(
               entry.url.replace(rtcConfig.url + '/', ''),
-              affectedFiles,
             );
+            const preparedTestFile = filePreparator.toGitComparable(file);
+
+            localConnector.addRelationship(testName, preparedFile);
+            localConnector.addRelationship(testName, preparedTestFile);
           }
         }
       }
