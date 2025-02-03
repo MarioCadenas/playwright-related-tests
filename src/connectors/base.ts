@@ -1,4 +1,4 @@
-import type { RelationshipType } from '../types';
+import type { ConnectorOptions, RelationshipType } from '../types';
 
 export abstract class BaseConnector {
   constructor() {}
@@ -18,13 +18,12 @@ export abstract class LocalConnector extends BaseConnector {
 export abstract class RemoteConnector extends BaseConnector {
   abstract download(
     type: RelationshipType,
-    fromPath: string,
-    headers?: Record<string, string>,
+    options: ConnectorOptions,
   ): Promise<string | null>;
 
   abstract upload(
     type: RelationshipType,
     folder: string,
-    destination: string,
+    options: ConnectorOptions,
   ): Promise<void>;
 }

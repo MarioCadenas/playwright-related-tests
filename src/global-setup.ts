@@ -9,46 +9,44 @@ import {
   S3Connector,
   type TRemoteConnector,
 } from './connectors';
-import type { Constructor } from './types';
+import type {
+  ConnectorOptions,
+  Constructor,
+  EndpointConnectorParamsOptions,
+  S3ConnectorParamsOptions,
+} from './types';
 
 const exec = promisify(syncExec);
 
-type ConnectorOptions = {
-  fromRemotePath?: string;
-  headers?: Record<string, string>;
-};
-
-async function findRelatedTests(
-  options: ConnectorOptions,
-  // TODO improve this, it's a bit hacky
-  remoteConnector: Constructor<TRemoteConnector> | undefined = !options.headers
-    ? S3Connector
-    : undefined,
-): Promise<{
+type RelatedTests = Promise<{
   impactedTestFiles: string[];
   impactedTestNames: string[];
-}> {
+}>;
+
+async function findRelatedTests(
+  options?: ConnectorOptions,
+  remoteConnector:
+    | Constructor<TRemoteConnector>
+    | undefined = typeof options === 'string' ? S3Connector : undefined,
+): RelatedTests {
   const { stdout } = await exec('git diff --name-only HEAD');
   const modifiedFiles = stdout.trim().split('\n');
   const relationShipManager = new RelationshipManager(
     modifiedFiles,
     remoteConnector,
   );
-
   await relationShipManager.init({
-    fromRemotePath: options?.fromRemotePath,
-    headers: options?.headers,
+    options,
   });
 
   return relationShipManager.extractRelationships();
 }
 
 export async function getImpactedTestsRegex(
-  options: ConnectorOptions,
-  // TODO improve this, it's a bit hacky
-  remoteConnector: Constructor<TRemoteConnector> | undefined = !options.headers
-    ? S3Connector
-    : EndpointConnector,
+  options?: ConnectorOptions,
+  remoteConnector:
+    | Constructor<TRemoteConnector>
+    | undefined = typeof options === 'string' ? S3Connector : EndpointConnector,
 ): Promise<RegExp | undefined> {
   const { impactedTestNames } = await findRelatedTests(
     options,
@@ -79,11 +77,20 @@ ${testTitleRegex}
 
 export async function updateConfigWithImpactedTests(
   config: FullConfig,
-  // TODO improve this, it's a bit hacky
-  options: ConnectorOptions,
-  remoteConnector: Constructor<TRemoteConnector> | undefined = !options?.headers
-    ? S3Connector
-    : EndpointConnector,
+  options?: S3ConnectorParamsOptions,
+  remoteConnector?: Constructor<S3Connector>,
+): Promise<void>;
+export async function updateConfigWithImpactedTests(
+  config: FullConfig,
+  options?: EndpointConnectorParamsOptions,
+  remoteConnector?: Constructor<EndpointConnector>,
+): Promise<void>;
+export async function updateConfigWithImpactedTests(
+  config: FullConfig,
+  options?: ConnectorOptions,
+  remoteConnector:
+    | Constructor<TRemoteConnector>
+    | undefined = typeof options === 'string' ? S3Connector : undefined,
 ): Promise<void> {
   const regex = await getImpactedTestsRegex(options, remoteConnector);
 

@@ -2,18 +2,15 @@ import fs from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { Readable } from 'node:stream';
+import { readFile } from 'fs/promises';
 
 import { RemoteConnector } from './base';
-import type { RelationshipType } from '../types';
+import type {
+  EndpointConnectorParamsOptions,
+  RelationshipType,
+} from '../types';
 import { Compressor } from '../compressor';
 import { logger } from '../logger';
-
-type FetchOptions = {
-  url: string;
-  method: 'GET' | 'POST' | 'PUT';
-  headers: Record<string, string>;
-  body?: string;
-};
 
 export class EndpointConnector extends RemoteConnector {
   constructor() {
@@ -24,18 +21,20 @@ export class EndpointConnector extends RemoteConnector {
     let nodeReadableStream: Readable;
     if (res?.body) {
       nodeReadableStream = Readable.from(res.body);
+    } else {
+      throw new Error('Response body is empty');
     }
+    const fileStream = fs.createWriteStream(outputPath);
     return new Promise((resolve, reject) => {
-      const fileStream = fs.createWriteStream(outputPath);
       if (res.body) {
         nodeReadableStream.pipe(fileStream);
-        nodeReadableStream.on('end', resolve);
+        fileStream.on('finish', resolve);
         fileStream.on('error', reject);
       }
     });
   }
 
-  private async fetch(options: FetchOptions) {
+  private async fetch(options: EndpointConnectorParamsOptions) {
     const { url, method, headers, body } = options || {};
     const response = await fetch(url, {
       method,
@@ -48,21 +47,37 @@ export class EndpointConnector extends RemoteConnector {
     return response;
   }
 
-  async upload() {
-    console.log('Upload not implemented');
+  async upload(
+    type: RelationshipType,
+    folder: string,
+    options: EndpointConnectorParamsOptions,
+  ): Promise<void> {
+    const filename = `${type}.tar.gz`;
+    const compressedFilePath = await Compressor.compress(
+      folder,
+      path.join(tmpdir(), filename),
+    );
+    const fileData = await readFile(compressedFilePath);
+    try {
+      await this.fetch({
+        ...options,
+        body: fileData,
+      });
+    } catch (e) {
+      logger.error(`File could not be uploaded: ${e}`);
+    }
   }
 
   async download(
     type: RelationshipType,
-    fromPath: string,
-    headers?: Record<string, string>,
+    options: EndpointConnectorParamsOptions,
   ): Promise<string | null> {
-    if (!fromPath) {
-      logger.log('No URL provided.');
+    if (!options.url) {
+      logger.error('No URL provided.');
       return null;
     }
-    if (!headers) {
-      logger.log('No Headers provided.');
+    if (!options.headers) {
+      logger.error('No Headers provided.');
       return null;
     }
     const filename = `${type}.tar.gz`;
@@ -70,20 +85,16 @@ export class EndpointConnector extends RemoteConnector {
     const tmpToExtract = path.join(tmpdir(), 'extracted');
 
     try {
-      const file = await this.fetch({
-        url: fromPath,
-        // This could possible be a POST request
-        method: 'GET',
-        headers: headers,
+      const res = await this.fetch({
+        ...options,
       });
-      await this.createStream(file, filePath);
+      await this.createStream(res, filePath);
     } catch (e) {
-      logger.log(`File could not be fetched: ${e}`);
+      logger.error(`File could not be fetched: ${e}`);
       return null;
     }
 
     fs.mkdirSync(tmpToExtract, { recursive: true });
-
     // We should maintain a cache of the downloaded files, so we don't download the same file multiple times.
     // download tar or zip from s3, and maybe extract it. Return the path where the file is
     return Compressor.extract(filePath, tmpToExtract);
