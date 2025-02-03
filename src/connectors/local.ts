@@ -25,14 +25,25 @@ export class LocalFileSystemConnector extends LocalConnector {
       return;
     }
 
-    if (fs.existsSync(this.folder)) {
+    if (
+      fs.existsSync(this.folder) &&
+      fs.readdirSync(this.folder).length !== 0
+    ) {
       logger.log(
         `Folder with affected files already exists locally, skipping sync.`,
       );
       return;
     }
 
-    return await fs.promises.cp(filesPath, this.folder);
+    if (fs.readdirSync(this.folder).length === 0) {
+      fs.rmSync(this.folder, { recursive: true });
+    }
+
+    return await fs.promises.cp(
+      path.join(filesPath, this.folderName),
+      this.folder,
+      { recursive: true },
+    );
   }
 
   getFolder() {
