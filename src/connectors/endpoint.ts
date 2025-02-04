@@ -5,10 +5,8 @@ import { Readable } from 'node:stream';
 import { readFile } from 'fs/promises';
 
 import { RemoteConnector } from './base';
-import type {
-  EndpointConnectorParamsOptions,
-  RelationshipType,
-} from '../types';
+import type { RelationshipType } from '../types';
+import type { EndpointConnectorParamsOptions } from './types';
 import { Compressor } from '../compressor';
 import { logger } from '../logger';
 

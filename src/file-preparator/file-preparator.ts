@@ -1,3 +1,4 @@
+import nodePath from 'node:path';
 import { type Config } from '../config';
 
 export class FilePreparator {
@@ -26,6 +27,13 @@ export class FilePreparator {
 
   toGitComparable(path: string): string {
     let normalizedPath = path.replace(/\\/g, '/');
+
+    if (normalizedPath.startsWith('@fs/')) {
+      normalizedPath = normalizedPath.replace(
+        nodePath.join('@fs', process.cwd()),
+        '',
+      );
+    }
 
     if (normalizedPath.startsWith('./')) {
       normalizedPath = normalizedPath.substring(2);

@@ -1,4 +1,5 @@
-import type { ConnectorOptions, RelationshipType } from '../types';
+import type { RelationshipType } from '../types';
+import type { ConnectorOptions } from './types';
 
 export abstract class BaseConnector {
   constructor() {}
@@ -6,10 +7,12 @@ export abstract class BaseConnector {
 
 export abstract class LocalConnector extends BaseConnector {
   protected folder: string;
+  protected folderName: string;
 
   constructor(folder: string) {
     super();
     this.folder = folder;
+    this.folderName = folder.split('/').pop() || '';
   }
 
   abstract sync(filesPath: string): Promise<void>;

@@ -7,10 +7,12 @@ import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 
 import { RemoteConnector } from './base';
-import type { RelationshipType, S3ConnectorParamsOptions } from '../types';
+import type { RelationshipType } from '../types';
+import type { S3ConnectorParamsOptions } from './types';
 import { Compressor } from '../compressor';
 import { tmpdir } from 'node:os';
 import { logger } from '../logger';
+import { generateUniqueId } from '../utils';
 
 const pipeline = promisify(nonPromisePipeline);
 
@@ -136,7 +138,7 @@ export class S3Connector extends RemoteConnector {
   ): Promise<string | null> {
     const filename = `${type}.tar.gz`;
     const filePath = path.join(tmpdir(), filename);
-    const tmpToExtract = path.join(tmpdir(), 'extracted');
+    const tmpToExtract = path.join(tmpdir(), `extracted-${generateUniqueId()}`);
     const s3FilePath = path.join(fromPath, filename);
 
     try {

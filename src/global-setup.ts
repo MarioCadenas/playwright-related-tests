@@ -11,10 +11,10 @@ import {
 } from './connectors';
 import type {
   ConnectorOptions,
-  Constructor,
   EndpointConnectorParamsOptions,
   S3ConnectorParamsOptions,
-} from './types';
+} from './connectors/types';
+import type { Constructor } from './types';
 
 const exec = promisify(syncExec);
 

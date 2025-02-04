@@ -4,13 +4,12 @@ import {
   S3Connector,
   type TRemoteConnector,
 } from './connectors';
+import type { Constructor, RelationshipType } from './types';
 import type {
   ConnectorOptions,
-  Constructor,
   EndpointConnectorParamsOptions,
-  RelationshipType,
   S3ConnectorParamsOptions,
-} from './types';
+} from './connectors/types';
 import { logger } from './logger';
 
 export async function upSyncToRemote(

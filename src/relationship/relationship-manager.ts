@@ -2,13 +2,12 @@ import chalk from 'chalk';
 import { logger } from '../logger';
 import { LocalFileSystemConnector, type TRemoteConnector } from '../connectors';
 import { AFFECTED_FILES_FOLDER, RELATIONSHIP_TYPES } from '../constants';
+import type { RelationshipType, Constructor } from '../types';
 import type {
-  RelationshipType,
-  Constructor,
   ConnectorOptions,
   EndpointConnectorParamsOptions,
   S3ConnectorParamsOptions,
-} from '../types';
+} from '../connectors/types';
 
 interface InitSkipOptions {
   skipDownload: true;

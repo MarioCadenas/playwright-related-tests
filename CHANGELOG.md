@@ -1,3 +1,11 @@
+# [1.1.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.0.2...v1.1.0) (2025-02-03)
+
+
+### Features
+
+* add relationship manager ([#8](https://github.com/MarioCadenas/playwright-related-tests/issues/8)) ([e845f7d](https://github.com/MarioCadenas/playwright-related-tests/commit/e845f7d9046ac10f52d2c58b23eadff7c23b6331))
+* create local playground ([#7](https://github.com/MarioCadenas/playwright-related-tests/issues/7)) ([36e89e8](https://github.com/MarioCadenas/playwright-related-tests/commit/36e89e823452ba33525f0329d2a188cbde14fcbb))
+
 ## [1.0.2](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.0.1...v1.0.2) (2025-01-20)
 
 
