@@ -4,40 +4,56 @@ import { promisify } from 'node:util';
 import { RelatedTestsConfig } from './config';
 import { logger } from './logger';
 import { RelationshipManager } from './relationship';
-import { S3Connector, type TRemoteConnector } from './connectors';
-import type { Constructor } from './types';
+import {
+  EndpointConnector,
+  S3Connector,
+  type TRemoteConnector,
+} from './connectors';
+import type {
+  ConnectorOptions,
+  EndpointConnectorParamsOptions,
+  S3ConnectorParamsOptions,
+} from './connectors/types';
+import type { Constructor, RelationshipType } from './types';
 
 const exec = promisify(syncExec);
 
-async function findRelatedTests(
-  fromRemotePath?: string,
-  remoteConnector: Constructor<TRemoteConnector> | undefined = fromRemotePath
-    ? S3Connector
-    : undefined,
-): Promise<{
+type RelatedTests = Promise<{
   impactedTestFiles: string[];
   impactedTestNames: string[];
-}> {
+}>;
+
+async function findRelatedTests(
+  type?: RelationshipType,
+  options?: ConnectorOptions,
+  remoteConnector:
+    | Constructor<TRemoteConnector>
+    | undefined = typeof options === 'string' ? S3Connector : undefined,
+): RelatedTests {
   const { stdout } = await exec('git diff --name-only HEAD');
   const modifiedFiles = stdout.trim().split('\n');
   const relationShipManager = new RelationshipManager(
     modifiedFiles,
     remoteConnector,
   );
-
-  await relationShipManager.init({ fromRemotePath });
+  await relationShipManager.init({
+    type,
+    options,
+  });
 
   return relationShipManager.extractRelationships();
 }
 
 export async function getImpactedTestsRegex(
-  fromRemotePath?: string,
-  remoteConnector: Constructor<TRemoteConnector> | undefined = fromRemotePath
-    ? S3Connector
-    : undefined,
+  type?: RelationshipType,
+  options?: ConnectorOptions,
+  remoteConnector:
+    | Constructor<TRemoteConnector>
+    | undefined = typeof options === 'string' ? S3Connector : undefined,
 ): Promise<RegExp | undefined> {
   const { impactedTestNames } = await findRelatedTests(
-    fromRemotePath,
+    type,
+    options,
     remoteConnector,
   );
 
@@ -65,12 +81,25 @@ ${testTitleRegex}
 
 export async function updateConfigWithImpactedTests(
   config: FullConfig,
-  fromRemotePath?: string,
-  remoteConnector: Constructor<TRemoteConnector> | undefined = fromRemotePath
-    ? S3Connector
-    : undefined,
+  type?: RelationshipType,
+  options?: S3ConnectorParamsOptions,
+  remoteConnector?: Constructor<S3Connector>,
+): Promise<void>;
+export async function updateConfigWithImpactedTests(
+  config: FullConfig,
+  type?: RelationshipType,
+  options?: EndpointConnectorParamsOptions,
+  remoteConnector?: Constructor<EndpointConnector>,
+): Promise<void>;
+export async function updateConfigWithImpactedTests(
+  config: FullConfig,
+  type?: RelationshipType,
+  options?: ConnectorOptions,
+  remoteConnector:
+    | Constructor<TRemoteConnector>
+    | undefined = typeof options === 'string' ? S3Connector : undefined,
 ): Promise<void> {
-  const regex = await getImpactedTestsRegex(fromRemotePath, remoteConnector);
+  const regex = await getImpactedTestsRegex(type, options, remoteConnector);
 
   if (regex) {
     config.grep = regex;

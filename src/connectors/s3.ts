@@ -8,6 +8,7 @@ import { Upload } from '@aws-sdk/lib-storage';
 
 import { RemoteConnector } from './base';
 import type { RelationshipType } from '../types';
+import type { S3ConnectorParamsOptions } from './types';
 import { Compressor } from '../compressor';
 import { tmpdir } from 'node:os';
 import { logger } from '../logger';
@@ -158,7 +159,7 @@ export class S3Connector extends RemoteConnector {
   async upload(
     type: RelationshipType,
     folder: string,
-    destination: string,
+    options: S3ConnectorParamsOptions,
   ): Promise<void> {
     const filename = `${type}.tar.gz`;
     const compressedFilePath = await Compressor.compress(
@@ -168,7 +169,7 @@ export class S3Connector extends RemoteConnector {
 
     return await this.uploadFile(
       compressedFilePath,
-      path.join(destination, filename),
+      path.join(options, filename),
     );
   }
 }

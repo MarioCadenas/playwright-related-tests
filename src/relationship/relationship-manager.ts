@@ -3,6 +3,11 @@ import { logger } from '../logger';
 import { LocalFileSystemConnector, type TRemoteConnector } from '../connectors';
 import { AFFECTED_FILES_FOLDER, RELATIONSHIP_TYPES } from '../constants';
 import type { RelationshipType, Constructor } from '../types';
+import type {
+  ConnectorOptions,
+  EndpointConnectorParamsOptions,
+  S3ConnectorParamsOptions,
+} from '../connectors/types';
 
 interface InitSkipOptions {
   skipDownload: true;
@@ -11,7 +16,7 @@ interface InitSkipOptions {
 interface InitOptions {
   skipDownload?: false;
   type?: RelationshipType;
-  fromRemotePath?: string;
+  options?: ConnectorOptions;
 }
 
 export class RelationshipManager<T extends TRemoteConnector> {
@@ -46,10 +51,11 @@ export class RelationshipManager<T extends TRemoteConnector> {
   async init(options: InitSkipOptions | InitOptions) {
     if (options.skipDownload) return;
 
-    const { type = RELATIONSHIP_TYPES.MAIN, fromRemotePath } = options;
+    const { type = RELATIONSHIP_TYPES.MAIN, options: downloadOptions } =
+      options;
 
-    if (fromRemotePath) {
-      await this.download(type, fromRemotePath);
+    if (downloadOptions) {
+      await this.download(type, downloadOptions);
     }
   }
 
@@ -106,22 +112,28 @@ ${chalk.cyan(Array.from(impactedTestFiles).join('\n\n'))}
     await this.connectors.local.sync(filesPath);
   }
 
-  async download(type: RelationshipType, fromPath: string) {
-    const downloadPath = await this.connectors.remote?.download(type, fromPath);
+  async download(type: RelationshipType, options: ConnectorOptions) {
+    const downloadPath = await this.connectors.remote?.download(
+      type,
+      options as S3ConnectorParamsOptions & EndpointConnectorParamsOptions,
+    );
 
     if (!downloadPath) return;
 
     await this.syncLocal(downloadPath);
   }
 
-  async upsync(type: RelationshipType, destination: string) {
+  async upsync(
+    type: RelationshipType,
+    options: ConnectorOptions,
+  ): Promise<void> {
     logger.debug(
       `Synchronizing relationship files to remote for type: ${type}`,
     );
     await this.connectors.remote?.upload(
       type,
       this.connectors.local.getFolder(),
-      destination,
+      options as S3ConnectorParamsOptions & EndpointConnectorParamsOptions,
     );
   }
 }
