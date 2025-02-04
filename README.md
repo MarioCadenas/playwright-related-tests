@@ -91,11 +91,38 @@ export default async function globalTeardown() {
 ### updateConfigWithImpactedTests
 
 This function allows you to synchronize the files from the remote of your choice. By default it uses the S3 connector,
-but you can provide the connector of your choice.
+but you can provide the connector of your choice. The library provides 2 predefined connectors `S3Connector` and `EndpointConnector` which you can import directly from `playwright-related-tests`, or you can create your own connector by extending the `RemoteConnector` class.
 
-The second argument is the path were the file will be found. In s3 for example, it will be the folder in the bucket.
+Example
+```ts
+// global-setup.ts
+import { updateConfigWithImpactedTests, EndpointConnector} from 'playwright-related-tests';
 
-The last argument is the connector, by default is the S3 connector.
+await updateConfigWithImpactedTests(
+  config,
+  'main',
+  {
+    url: 'http://127.0.0.1:8080',
+    method: 'GET',
+    headers: {
+      "Content-Type": "application/gzip",
+    },
+  },
+  EndpointConnector,
+);
+```
+
+The first argument is the Playwright config.
+
+The second argument is the type of relationship, by default is main, but commits will be supported in the future. 
+
+The third argument is the connector's `options` which will vary depending on the connector provided in the 4th argument. 
+
+- For `S3Connector`: path where the file will be found. In s3 for example, it will be the folder in the bucket.
+
+- For `EndpointConnector`: An object with required `url`, `headers`, `method` properties and optional `body` that will be used to fetch the file.
+
+The last argument is the connector, which defaults to `S3Connector`.
 
 ### upSyncToRemote
 
