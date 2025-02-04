@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.1.0...v1.1.1) (2025-02-04)
+
+
+### Bug Fixes
+
+* path normalization and s3 extract ([#10](https://github.com/MarioCadenas/playwright-related-tests/issues/10)) ([9950c4a](https://github.com/MarioCadenas/playwright-related-tests/commit/9950c4a43716259573032c230ee509f0338aba58))
+
 # [1.1.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.0.2...v1.1.0) (2025-02-03)
 
 
