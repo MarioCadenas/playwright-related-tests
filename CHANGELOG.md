@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.2.0...v1.3.0) (2025-02-04)
+
+
+### Features
+
+* extract screenshots ([#12](https://github.com/MarioCadenas/playwright-related-tests/issues/12)) ([c956695](https://github.com/MarioCadenas/playwright-related-tests/commit/c9566956eba854066f8f7a47cf8c55bad05bd5b6))
+
 # [1.2.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.1.1...v1.2.0) (2025-02-04)
 
 
