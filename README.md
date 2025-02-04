@@ -94,9 +94,13 @@ This function allows you to synchronize the files from the remote of your choice
 but you can provide the connector of your choice. The library provides 2 predefined connectors `S3Connector` and `EndpointConnector` which you can import directly from `playwright-related-tests`, or you can create your own connector by extending the `RemoteConnector` class.
 
 Example
+
 ```ts
 // global-setup.ts
-import { updateConfigWithImpactedTests, EndpointConnector} from 'playwright-related-tests';
+import {
+  updateConfigWithImpactedTests,
+  EndpointConnector,
+} from 'playwright-related-tests';
 
 await updateConfigWithImpactedTests(
   config,
@@ -105,7 +109,7 @@ await updateConfigWithImpactedTests(
     url: 'http://127.0.0.1:8080',
     method: 'GET',
     headers: {
-      "Content-Type": "application/gzip",
+      'Content-Type': 'application/gzip',
     },
   },
   EndpointConnector,
@@ -114,9 +118,9 @@ await updateConfigWithImpactedTests(
 
 The first argument is the Playwright config.
 
-The second argument is the type of relationship, by default is main, but commits will be supported in the future. 
+The second argument is the type of relationship, by default is main, but commits will be supported in the future.
 
-The third argument is the connector's `options` which will vary depending on the connector provided in the 4th argument. 
+The third argument is the connector's `options` which will vary depending on the connector provided in the 4th argument.
 
 - For `S3Connector`: path where the file will be found. In s3 for example, it will be the folder in the bucket.
 
