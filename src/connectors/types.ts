@@ -12,4 +12,4 @@ export type EndpointConnectorParamsOptions = {
   body?: BodyInit;
 };
 
-export type ConnectorOptions = EndpointConnectorParamsOptions | string;
+export type ConnectorOptions = EndpointConnectorParamsOptions | S3ConnectorParamsOptions;
