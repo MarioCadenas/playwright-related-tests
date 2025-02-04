@@ -41,7 +41,8 @@ export class EndpointConnector extends RemoteConnector {
       ...(body && { body }),
     });
     if (!response.ok) {
-      throw new Error(await response.text());
+      const errorMessage = `${response.status} - ${response.statusText}`;
+      throw new Error(errorMessage);
     }
     return response;
   }
@@ -90,13 +91,14 @@ export class EndpointConnector extends RemoteConnector {
       });
       await this.createStream(res, filePath);
     } catch (e) {
+      // TODO check if this is logging the error correctly.
       logger.error(`File could not be fetched: ${e}`);
       return null;
     }
 
     fs.mkdirSync(tmpToExtract, { recursive: true });
-    // We should maintain a cache of the downloaded files, so we don't download the same file multiple times.
-    // download tar or zip from s3, and maybe extract it. Return the path where the file is
+
+    // TODO Implement a cache of the downloaded files, so we don't download the same file multiple times.
     return Compressor.extract(filePath, tmpToExtract);
   }
 }

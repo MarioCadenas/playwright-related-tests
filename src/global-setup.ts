@@ -49,7 +49,7 @@ export async function getImpactedTestsRegex(
   options?: ConnectorOptions,
   remoteConnector:
     | Constructor<TRemoteConnector>
-    | undefined = typeof options === 'string' ? S3Connector : EndpointConnector,
+    | undefined = typeof options === 'string' ? S3Connector : undefined,
 ): Promise<RegExp | undefined> {
   const { impactedTestNames } = await findRelatedTests(
     type,
