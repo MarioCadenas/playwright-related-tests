@@ -91,7 +91,6 @@ export class EndpointConnector extends RemoteConnector {
       });
       await this.createStream(res, filePath);
     } catch (e) {
-      // TODO check if this is logging the error correctly.
       logger.error(`File could not be fetched: ${e}`);
       return null;
     }
