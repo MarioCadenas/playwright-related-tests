@@ -1,4 +1,11 @@
-import { test, type Coverage, type Page } from '@playwright/test';
+import {
+  test,
+  type Coverage,
+  type Page,
+  type TestInfo,
+} from '@playwright/test';
+import fs from 'node:fs';
+import path from 'node:path';
 import { RelatedTestsConfig } from '../config';
 import { FilePreparator } from '../file-preparator';
 import { getSourceMap } from './source-map';
@@ -22,13 +29,7 @@ const extendedTest = test.extend<{ page: Page }>({
         AFFECTED_FILES_FOLDER,
       );
 
-      await storeAffectedFiles(
-        testInfo.titlePath.join(' - ').replaceAll('/', '~'),
-        testInfo.file,
-        coverage,
-        localConnector,
-      );
-
+      await storeAffectedFiles(testInfo, coverage, localConnector);
       localConnector.writeAffectedFiles();
     }
   },
@@ -50,15 +51,38 @@ export { extendedTest as test };
 /** @internal */
 export const expect = extendedTest.expect;
 
+function safeReadDir(dir: string): string[] {
+  try {
+    return fs.readdirSync(dir);
+  } catch {
+    return [];
+  }
+}
+
 async function storeAffectedFiles(
-  testName: string,
-  file: string,
+  testInfo: TestInfo,
   coverage: CoverageReport[],
   localConnector: LocalFileSystemConnector,
 ) {
+  const testName = testInfo.titlePath.join(' - ').replaceAll('/', '~');
+  const file = testInfo.file;
+  const snapshotsDir = testInfo.snapshotDir;
   const rtc = RelatedTestsConfig.instance;
   const rtcConfig = rtc.getConfig();
   const filePreparator = new FilePreparator(rtcConfig);
+
+  const snapshotFiles = safeReadDir(snapshotsDir).map((file) => {
+    return path.join(snapshotsDir, file);
+  });
+  // This will add the snapshot files to each json relation file, but we have no way to know which specific screenshots
+  // are part of each test inside a test file.
+  const testRelatedFiles = [file, ...snapshotFiles]
+    .filter(filePreparator.outOfProjectFiles)
+    .map(filePreparator.toGitComparable);
+
+  for (const testRelatedFile of testRelatedFiles) {
+    localConnector.addRelationship(testName, testRelatedFile);
+  }
 
   return Promise.all(
     coverage.map(async (entry) => {
@@ -68,7 +92,7 @@ async function storeAffectedFiles(
         const sourceMap = await getSourceMap(entry);
 
         if (sourceMap) {
-          const sources = [...sourceMap.sources, file]
+          const sources = [...sourceMap.sources]
             .filter(filePreparator.outOfProjectFiles)
             .map(filePreparator.toGitComparable);
 
@@ -82,10 +106,8 @@ async function storeAffectedFiles(
             const preparedFile = filePreparator.toGitComparable(
               entry.url.replace(rtcConfig.url + '/', ''),
             );
-            const preparedTestFile = filePreparator.toGitComparable(file);
 
             localConnector.addRelationship(testName, preparedFile);
-            localConnector.addRelationship(testName, preparedTestFile);
           }
         }
       }
