@@ -90,6 +90,9 @@ export class EndpointConnector extends RemoteConnector {
         url: endpointUrl,
       });
       await this.createStream(res, filePath);
+      logger.log(
+        `File downloaded successfully from ${endpointUrl} to ${filePath}`,
+      );
     } catch (e) {
       logger.error(`File could not be fetched: ${e}`);
       return null;
