@@ -14,7 +14,7 @@ import type {
   EndpointConnectorParamsOptions,
   S3ConnectorParamsOptions,
 } from './connectors/types';
-import type { Constructor } from './types';
+import type { Constructor, RelationshipType } from './types';
 
 const exec = promisify(syncExec);
 
@@ -24,6 +24,7 @@ type RelatedTests = Promise<{
 }>;
 
 async function findRelatedTests(
+  type?: RelationshipType,
   options?: ConnectorOptions,
   remoteConnector:
     | Constructor<TRemoteConnector>
@@ -36,6 +37,7 @@ async function findRelatedTests(
     remoteConnector,
   );
   await relationShipManager.init({
+    type,
     options,
   });
 
@@ -43,12 +45,14 @@ async function findRelatedTests(
 }
 
 export async function getImpactedTestsRegex(
+  type?: RelationshipType,
   options?: ConnectorOptions,
   remoteConnector:
     | Constructor<TRemoteConnector>
     | undefined = typeof options === 'string' ? S3Connector : EndpointConnector,
 ): Promise<RegExp | undefined> {
   const { impactedTestNames } = await findRelatedTests(
+    type,
     options,
     remoteConnector,
   );
@@ -77,22 +81,25 @@ ${testTitleRegex}
 
 export async function updateConfigWithImpactedTests(
   config: FullConfig,
+  type?: RelationshipType,
   options?: S3ConnectorParamsOptions,
   remoteConnector?: Constructor<S3Connector>,
 ): Promise<void>;
 export async function updateConfigWithImpactedTests(
   config: FullConfig,
+  type?: RelationshipType,
   options?: EndpointConnectorParamsOptions,
   remoteConnector?: Constructor<EndpointConnector>,
 ): Promise<void>;
 export async function updateConfigWithImpactedTests(
   config: FullConfig,
+  type?: RelationshipType,
   options?: ConnectorOptions,
   remoteConnector:
     | Constructor<TRemoteConnector>
     | undefined = typeof options === 'string' ? S3Connector : undefined,
 ): Promise<void> {
-  const regex = await getImpactedTestsRegex(options, remoteConnector);
+  const regex = await getImpactedTestsRegex(type, options, remoteConnector);
 
   if (regex) {
     config.grep = regex;

@@ -9,6 +9,7 @@ import type { RelationshipType } from '../types';
 import type { EndpointConnectorParamsOptions } from './types';
 import { Compressor } from '../compressor';
 import { logger } from '../logger';
+import { generateUniqueId } from '../utils';
 
 export class EndpointConnector extends RemoteConnector {
   constructor() {
@@ -79,12 +80,13 @@ export class EndpointConnector extends RemoteConnector {
       return null;
     }
     const filename = `${type}.tar.gz`;
+    const endpointUrl = `${options.url}/${filename}`;
     const filePath = path.join(tmpdir(), filename);
-    const tmpToExtract = path.join(tmpdir(), 'extracted');
-
+    const tmpToExtract = path.join(tmpdir(), `extracted-${generateUniqueId()}`);
     try {
       const res = await this.fetch({
         ...options,
+        url: endpointUrl,
       });
       await this.createStream(res, filePath);
     } catch (e) {
