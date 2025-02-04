@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.1.1...v1.2.0) (2025-02-04)
+
+
+### Features
+
+* create fetcher to download files from an endpoint ([#11](https://github.com/MarioCadenas/playwright-related-tests/issues/11)) ([8cb61a5](https://github.com/MarioCadenas/playwright-related-tests/commit/8cb61a5b1ef70b10761228132f02b9d0e76c7b8a))
+
 ## [1.1.1](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.1.0...v1.1.1) (2025-02-04)
 
 
