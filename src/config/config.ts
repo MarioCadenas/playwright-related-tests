@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'url';
 
 /**
  * @expand
@@ -22,14 +21,10 @@ export interface Config {
   exitProcess?: boolean;
 }
 
-const FILENAME = 'config.json';
+const FILENAME = '.prt-config.json';
 
 function getConfigFile() {
-  if (import.meta.url) {
-    return path.join(path.dirname(fileURLToPath(import.meta.url)), FILENAME);
-  }
-
-  return path.join(__dirname, FILENAME);
+  return path.join(process.cwd(), FILENAME);
 }
 
 const CONFIG_FILE = getConfigFile();
