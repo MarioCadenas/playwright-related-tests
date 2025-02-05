@@ -120,7 +120,7 @@ export class S3Connector extends RemoteConnector {
         `File downloaded successfully: ${this.bucketName}/${key} to ${downloadPath}`,
       );
     } catch (err) {
-      logger.warn(`File ${this.bucketName}/${key} does not exist yet.`);
+      throw new Error(`File ${this.bucketName}/${key} does not exist yet.`);
     }
   }
 
@@ -143,8 +143,8 @@ export class S3Connector extends RemoteConnector {
 
     try {
       await this.downloadFile(s3FilePath, filePath);
-    } catch {
-      logger.log(`File not found: ${s3FilePath}`);
+    } catch (err) {
+      logger.error(err);
 
       return null;
     }

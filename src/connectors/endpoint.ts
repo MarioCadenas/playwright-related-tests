@@ -44,6 +44,11 @@ export class EndpointConnector extends RemoteConnector {
       const errorMessage = `${response.status} - ${response.statusText}`;
       throw new Error(errorMessage);
     }
+
+    if (response.redirected && response.type === 'cors') {
+      throw new Error('There was a redirection.');
+    }
+
     return response;
   }
 
