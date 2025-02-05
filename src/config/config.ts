@@ -22,7 +22,7 @@ export interface Config {
   exitProcess?: boolean;
 }
 
-const FILENAME = 'config.json';
+const FILENAME = '.prt-config.json';
 const CONFIG_FILE_LOCATION = path.join(CONFIG_FOLDER, FILENAME);
 
 function getConfigFile() {

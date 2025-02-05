@@ -1,3 +1,31 @@
+## [1.3.1](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.3.0...v1.3.1) (2025-02-05)
+
+
+### Bug Fixes
+
+* move config file to cwd ([#13](https://github.com/MarioCadenas/playwright-related-tests/issues/13)) ([189f988](https://github.com/MarioCadenas/playwright-related-tests/commit/189f98884fcad11a728b23ae9c0c63de6a67eff1))
+
+# [1.3.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.2.0...v1.3.0) (2025-02-04)
+
+
+### Features
+
+* extract screenshots ([#12](https://github.com/MarioCadenas/playwright-related-tests/issues/12)) ([c956695](https://github.com/MarioCadenas/playwright-related-tests/commit/c9566956eba854066f8f7a47cf8c55bad05bd5b6))
+
+# [1.2.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.1.1...v1.2.0) (2025-02-04)
+
+
+### Features
+
+* create fetcher to download files from an endpoint ([#11](https://github.com/MarioCadenas/playwright-related-tests/issues/11)) ([8cb61a5](https://github.com/MarioCadenas/playwright-related-tests/commit/8cb61a5b1ef70b10761228132f02b9d0e76c7b8a))
+
+## [1.1.1](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.1.0...v1.1.1) (2025-02-04)
+
+
+### Bug Fixes
+
+* path normalization and s3 extract ([#10](https://github.com/MarioCadenas/playwright-related-tests/issues/10)) ([9950c4a](https://github.com/MarioCadenas/playwright-related-tests/commit/9950c4a43716259573032c230ee509f0338aba58))
+
 # [1.1.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.0.2...v1.1.0) (2025-02-03)
 
 
