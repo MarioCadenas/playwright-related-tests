@@ -1,6 +1,5 @@
 node_modules
 dist
 docs
-src/config/config.json
 **/test-results
 .DS_Store

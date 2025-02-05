@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { CONFIG_FOLDER } from '../constants';
 
 /**
  * @expand
@@ -24,7 +25,7 @@ export interface Config {
 const FILENAME = '.prt-config.json';
 
 function getConfigFile() {
-  return path.join(process.cwd(), FILENAME);
+  return path.join(CONFIG_FOLDER, FILENAME);
 }
 
 const CONFIG_FILE = getConfigFile();
@@ -61,6 +62,9 @@ export default class RelatedTestsConfig {
   }
 
   private saveToDisk() {
+    if (!fs.existsSync(CONFIG_FOLDER)) {
+      fs.mkdirSync(CONFIG_FOLDER);
+    }
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(this.config));
   }
 
