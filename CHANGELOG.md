@@ -1,3 +1,10 @@
+## [1.4.2](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.4.1...v1.4.2) (2025-02-05)
+
+
+### Bug Fixes
+
+* fix playground ([#16](https://github.com/MarioCadenas/playwright-related-tests/issues/16)) ([2b49213](https://github.com/MarioCadenas/playwright-related-tests/commit/2b492138f9ac363facc226474327ab3046a81e6e))
+
 ## [1.4.1](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.4.0...v1.4.1) (2025-02-05)
 
 
