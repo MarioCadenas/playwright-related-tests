@@ -8,7 +8,13 @@ export const RELATIONSHIP_TYPES = {
 
 const AFFECTED_FILES_FOLDER_NAME = '.affected-files';
 
-export const AFFECTED_FILES_FOLDER = path.join(
+export const CONFIG_FOLDER = path.join(
   process.cwd(),
+  'node_modules',
+  '.playwright-related-tests',
+);
+
+export const AFFECTED_FILES_FOLDER = path.join(
+  CONFIG_FOLDER,
   AFFECTED_FILES_FOLDER_NAME,
 );

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'url';
+import { CONFIG_FOLDER } from '../constants';
 
 /**
  * @expand
@@ -23,13 +23,10 @@ export interface Config {
 }
 
 const FILENAME = 'config.json';
+const CONFIG_FILE_LOCATION = path.join(CONFIG_FOLDER, FILENAME);
 
 function getConfigFile() {
-  if (import.meta.url) {
-    return path.join(path.dirname(fileURLToPath(import.meta.url)), FILENAME);
-  }
-
-  return path.join(__dirname, FILENAME);
+  return CONFIG_FILE_LOCATION;
 }
 
 const CONFIG_FILE = getConfigFile();
@@ -66,7 +63,10 @@ export default class RelatedTestsConfig {
   }
 
   private saveToDisk() {
-    fs.writeFileSync(CONFIG_FILE, JSON.stringify(this.config));
+    if (!fs.existsSync(CONFIG_FOLDER)) {
+      fs.mkdirSync(CONFIG_FOLDER);
+    }
+    fs.writeFileSync(CONFIG_FILE_LOCATION, JSON.stringify(this.config));
   }
 
   private loadFromDisk() {
