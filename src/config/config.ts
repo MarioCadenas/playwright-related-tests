@@ -23,10 +23,9 @@ export interface Config {
 }
 
 const FILENAME = '.prt-config.json';
-const CONFIG_FILE_LOCATION = path.join(CONFIG_FOLDER, FILENAME);
 
 function getConfigFile() {
-  return CONFIG_FILE_LOCATION;
+  return path.join(CONFIG_FOLDER, FILENAME);
 }
 
 const CONFIG_FILE = getConfigFile();
@@ -66,7 +65,7 @@ export default class RelatedTestsConfig {
     if (!fs.existsSync(CONFIG_FOLDER)) {
       fs.mkdirSync(CONFIG_FOLDER);
     }
-    fs.writeFileSync(CONFIG_FILE_LOCATION, JSON.stringify(this.config));
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(this.config));
   }
 
   private loadFromDisk() {
