@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.4.0...v1.4.1) (2025-02-05)
+
+
+### Bug Fixes
+
+* connectors when empty response ([#15](https://github.com/MarioCadenas/playwright-related-tests/issues/15)) ([9fcd99a](https://github.com/MarioCadenas/playwright-related-tests/commit/9fcd99acde8675387433ef1a79841d972489a4ec))
+
 # [1.4.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.3.1...v1.4.0) (2025-02-05)
 
 
