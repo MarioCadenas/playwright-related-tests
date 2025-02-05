@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.3.1...v1.4.0) (2025-02-05)
+
+
+### Features
+
+* move config inside node modules cwd ([#14](https://github.com/MarioCadenas/playwright-related-tests/issues/14)) ([b18b492](https://github.com/MarioCadenas/playwright-related-tests/commit/b18b492b435de455369d6f6add184dec398173ee))
+
 ## [1.3.1](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.3.0...v1.3.1) (2025-02-05)
 
 
