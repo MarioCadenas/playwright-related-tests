@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.3.0...v1.3.1) (2025-02-05)
+
+
+### Bug Fixes
+
+* move config file to cwd ([#13](https://github.com/MarioCadenas/playwright-related-tests/issues/13)) ([189f988](https://github.com/MarioCadenas/playwright-related-tests/commit/189f98884fcad11a728b23ae9c0c63de6a67eff1))
+
 # [1.3.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.2.0...v1.3.0) (2025-02-04)
 
 
