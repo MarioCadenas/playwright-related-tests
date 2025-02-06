@@ -13,7 +13,10 @@ function replaceWebpackIfExists(sourceMap: SourceMap) {
   };
 }
 
-export async function getSourceMap(entry: CoverageReport) {
+export async function getSourceMap(
+  entry: CoverageReport,
+  headers: Record<string, string>,
+) {
   const base64Header = 'data:application/json;charset=utf-8;base64,';
   const match = [
     ...(entry.source ?? '').matchAll(/\/\/# sourceMappingURL=(.*)/g),
@@ -32,13 +35,20 @@ export async function getSourceMap(entry: CoverageReport) {
     return replaceWebpackIfExists(JSON.parse(buffer.toString()));
   }
 
-  const sourceMappingURL = match.find((sourceMap) =>
+  let sourceMappingURL = match.find((sourceMap) =>
     sourceMap?.startsWith('https'),
   );
 
+  // relative path
+  if (!sourceMappingURL && match.length > 0) {
+    sourceMappingURL = entry.url + '.map';
+  }
+
   if (sourceMappingURL) {
     try {
-      const response = await fetch(sourceMappingURL).then((r) => r.json());
+      const response = await fetch(sourceMappingURL, {
+        headers,
+      }).then((r) => r.json());
 
       return replaceWebpackIfExists(response);
     } catch (error) {

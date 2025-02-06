@@ -18,11 +18,7 @@ export class FilePreparator {
   }
 
   outOfProjectFiles(source: string) {
-    return (
-      !source.startsWith('../') &&
-      !source.startsWith('webpack') &&
-      !this.ignorePatternChecker(source)
-    );
+    return !source.startsWith('webpack') && !this.ignorePatternChecker(source);
   }
 
   toGitComparable(path: string): string {
@@ -35,10 +31,6 @@ export class FilePreparator {
       );
     }
 
-    if (normalizedPath.startsWith('./')) {
-      normalizedPath = normalizedPath.substring(2);
-    }
-
     if (normalizedPath.startsWith(process.cwd())) {
       normalizedPath = normalizedPath.substring(process.cwd().length);
     }
@@ -47,6 +39,8 @@ export class FilePreparator {
       normalizedPath = normalizedPath.substring(1);
     }
 
+    // Remove leading ./ or ../ or ../../ or ../../../
+    normalizedPath = normalizedPath.replace(/^(\.\/|\.\.\/|\/)+/, '');
     // Remove query params
     normalizedPath = normalizedPath.replace(/\?.*$/, '');
 
