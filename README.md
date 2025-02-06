@@ -153,8 +153,6 @@ It allows downloading and uploading, but for this, it will need a few env vars i
 
 If all of this is set, you can use the `upSyncToRemote` in your global-teardown to upload the files to the bucket.
 
-```ts
-
 ## First run
 
 Once the setup is done, this will need a first run against the main/master branch so it can get the relationships between the tests and the files.
@@ -167,7 +165,22 @@ you wanted to keep the files in the repo. This has the tradeoff of needing to al
 
 Ideally, these files will only get updated when running the full suite against master. When running on PRs they shouldn't change the main state of the files.
 
-TODO
+## FAQ
 
-- [ ] Find a way to make this work when the user also wants to run using coverage.
+### How do I make this work if I'm also using coverage?
+
+The test function provides a page object that is extended, so both the package and the consumer
+can use coverage.
+
+There's only one small difference on how to use it. Instead of using the `page.coverage.[coverageMethod]` directly, you should use `page.[coverageMethod]`.
+
+So for example, to start coverage, you would call `page.startJSCoverage()`. Take into account that this library
+will always call this function before each test starts, and will stop the coverage after each test ends, so there's no need to call it.
+
+In case you want to get the coverage value collected during the test, use this function:
+
+```ts
+const coverage = await page.stopJSCoverage();
 ```
+
+That will return the coverage in the same way playwright does.

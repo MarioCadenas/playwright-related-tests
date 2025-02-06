@@ -1,1 +1,1 @@
-export { test, expect } from './test';
+export { test, expect, type PlaywrightRelatedTestsPage } from './test';

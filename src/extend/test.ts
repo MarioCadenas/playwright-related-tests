@@ -13,16 +13,51 @@ import type { CoverageReport } from './types';
 import { LocalFileSystemConnector } from '../connectors';
 import { AFFECTED_FILES_FOLDER } from '../constants';
 
+type CoverageResult = Awaited<ReturnType<Coverage['stopJSCoverage']>>;
+
+export interface PlaywrightRelatedTestsPage extends Page {
+  stopJSCoverage: () => Promise<void | CoverageResult>;
+  startJSCoverage: () => Promise<void>;
+}
+
 /** @internal */
-const extendedTest = test.extend<{ page: Page }>({
-  page: async ({ page }, use: (r: Page) => Promise<void>) => {
+const extendedTest = test.extend<{
+  page: PlaywrightRelatedTestsPage;
+}>({
+  page: async (
+    {
+      page,
+    }: {
+      page: PlaywrightRelatedTestsPage;
+    },
+    use: (r: PlaywrightRelatedTestsPage) => Promise<void>,
+  ) => {
     const testInfo = test.info();
 
-    await safeCoverageMethod(page, 'startJSCoverage');
+    const coverageResult = {
+      cov: undefined as void | CoverageResult,
+      async startJSCoverage() {
+        return await safeCoverageMethod(page, 'startJSCoverage');
+      },
+      async stopJSCoverage(): Promise<void | CoverageResult> {
+        const coverage = await safeCoverageMethod(page, 'stopJSCoverage');
+
+        if (coverage) {
+          this.cov = coverage;
+        }
+
+        return this.cov;
+      },
+    };
+
+    page.startJSCoverage = coverageResult.startJSCoverage.bind(coverageResult);
+    page.stopJSCoverage = coverageResult.stopJSCoverage.bind(coverageResult);
+
+    await page.startJSCoverage();
 
     await use(page);
 
-    const coverage = await safeCoverageMethod(page, 'stopJSCoverage');
+    const coverage = await page.stopJSCoverage();
 
     if (coverage) {
       const localConnector = new LocalFileSystemConnector(

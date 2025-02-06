@@ -1,5 +1,5 @@
 export { RelatedTestsConfig, type Config } from './config';
-export { test, expect } from './extend';
+export { test, expect, type PlaywrightRelatedTestsPage } from './extend';
 export {
   getImpactedTestsRegex,
   updateConfigWithImpactedTests,
