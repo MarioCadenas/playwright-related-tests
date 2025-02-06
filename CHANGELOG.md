@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.4.2...v1.5.0) (2025-02-06)
+
+
+### Features
+
+* allow external coverage calls ([#17](https://github.com/MarioCadenas/playwright-related-tests/issues/17)) ([cd3ac9d](https://github.com/MarioCadenas/playwright-related-tests/commit/cd3ac9d9d17af3cc73a4f5a771c9e79dcbd7861e))
+
 ## [1.4.2](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.4.1...v1.4.2) (2025-02-05)
 
 
