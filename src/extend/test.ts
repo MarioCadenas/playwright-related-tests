@@ -12,6 +12,7 @@ import { getSourceMap } from './source-map';
 import type { CoverageReport } from './types';
 import { LocalFileSystemConnector } from '../connectors';
 import { AFFECTED_FILES_FOLDER } from '../constants';
+import { logger } from '../logger';
 
 type CoverageResult = Awaited<ReturnType<Coverage['stopJSCoverage']>>;
 
@@ -94,6 +95,20 @@ function safeReadDir(dir: string): string[] {
   }
 }
 
+function getProcessEnvValue(key: string): string {
+  if (key.includes('process.env.')) {
+    key = key.replace('process.env.', '');
+  }
+
+  const value = process.env[key];
+
+  if (!value) {
+    throw new Error(`Missing environment variable: ${key}`);
+  }
+
+  return value;
+}
+
 async function storeAffectedFiles(
   testInfo: TestInfo,
   coverage: CoverageReport[],
@@ -119,12 +134,22 @@ async function storeAffectedFiles(
     localConnector.addRelationship(testName, testRelatedFile);
   }
 
+  const sourceMapHeaders = rtcConfig.sourceMapHeaders || {};
+  const headers: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(sourceMapHeaders)) {
+    headers[key] = getProcessEnvValue(value);
+  }
+
   return Promise.all(
     coverage.map(async (entry) => {
       if (entry.url.includes(rtcConfig.url)) {
-        if (!entry.source) return;
+        if (!entry.source) {
+          logger.warn(`${entry.url} has no source.`);
+          return;
+        }
 
-        const sourceMap = await getSourceMap(entry);
+        const sourceMap = await getSourceMap(entry, headers);
 
         if (sourceMap) {
           const sources = [...sourceMap.sources]
