@@ -1,3 +1,17 @@
+## [1.6.1](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.6.0...v1.6.1) (2025-02-07)
+
+
+### Bug Fixes
+
+* git modified files ([#19](https://github.com/MarioCadenas/playwright-related-tests/issues/19)) ([2ee2f4c](https://github.com/MarioCadenas/playwright-related-tests/commit/2ee2f4c1ad11d441490721c9549f7aaf50d66c39))
+
+# [1.6.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.5.0...v1.6.0) (2025-02-06)
+
+
+### Features
+
+* source maps and path normalization ([#18](https://github.com/MarioCadenas/playwright-related-tests/issues/18)) ([36e305d](https://github.com/MarioCadenas/playwright-related-tests/commit/36e305d85252fbb336ac582a5881956e405ea11a))
+
 # [1.5.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.4.2...v1.5.0) (2025-02-06)
 
 

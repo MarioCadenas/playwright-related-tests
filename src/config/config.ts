@@ -20,6 +20,25 @@ export interface Config {
    * This is useful for CI/CD pipelines in the pull request stage.
    */
   exitProcess?: boolean;
+  /**
+   * Headers to add to the request when fetching source maps (if your sourcemaps are not public, you might need to access them using some type of authentication).
+   * This will use a key to access `process.env`, so don't put the value directly in the config, but the key to access the environment variable.
+   *
+   * E.g.
+   *
+   * sourceMapHeaders: {
+   *   Authorization: 'process.env.MY_TOKEN'
+   * }
+   *
+   * or
+   *
+   * sourceMapHeaders: {
+   *   Authorization: 'MY_TOKEN'
+   * }
+   *
+   * This way we avoid writing any sensitive information in the config file.
+   */
+  sourceMapHeaders?: Record<string, string>;
 }
 
 const FILENAME = '.prt-config.json';
@@ -32,7 +51,6 @@ const CONFIG_FILE = getConfigFile();
 const DEFAULT_CONFIG: Config = {
   url: '',
   exitProcess: true,
-  affectedIgnorePatterns: [],
 };
 
 export default class RelatedTestsConfig {
