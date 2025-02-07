@@ -1,5 +1,8 @@
 import { type FullConfig } from '@playwright/test';
+import type { JSONReportSuite } from '@playwright/test/reporter';
 import { exec as syncExec } from 'node:child_process';
+import fs from 'node:fs';
+
 import { promisify } from 'node:util';
 import { RelatedTestsConfig } from './config';
 import { logger } from './logger';
@@ -15,6 +18,9 @@ import type {
   S3ConnectorParamsOptions,
 } from './connectors/types';
 import type { Constructor, RelationshipType } from './types';
+import { CONFIG_FOLDER } from './constants';
+import path from 'node:path';
+import { getPWTestList } from './utils';
 
 const exec = promisify(syncExec);
 
@@ -44,6 +50,26 @@ async function findRelatedTests(
   return relationShipManager.extractRelationships();
 }
 
+async function findNewlyAddedTests() {
+  const listOfNewTests: string[] = [];
+  const [testList, { stdout }] = await Promise.all([
+    getPWTestList(),
+    exec(`git ls-files --others --exclude-standard | grep '\.spec\..*$'`),
+  ]);
+  const untrackedFiles = stdout
+    .trim()
+    .split('\n')
+    .map((file) => path.basename(file));
+  for (const test of testList) {
+    for (const spec of test.specs) {
+      if (untrackedFiles.includes(test.file)) {
+        listOfNewTests.push(`${test.file} ${test.title} ${spec.title}`);
+      }
+    }
+  }
+  return listOfNewTests;
+}
+
 export async function getImpactedTestsRegex(
   type?: RelationshipType,
   options?: ConnectorOptions,
@@ -51,20 +77,19 @@ export async function getImpactedTestsRegex(
     | Constructor<TRemoteConnector>
     | undefined = typeof options === 'string' ? S3Connector : undefined,
 ): Promise<RegExp | undefined> {
-  const { impactedTestNames } = await findRelatedTests(
-    type,
-    options,
-    remoteConnector,
-  );
+  const [{ impactedTestNames }, newTests] = await Promise.all([
+    findRelatedTests(type, options, remoteConnector),
+    findNewlyAddedTests(),
+  ]);
 
-  if (impactedTestNames.length === 0) {
+  if (impactedTestNames.length === 0 && newTests.length === 0) {
     logger.debug(`No tests impacted by changes`);
     return;
   }
 
-  const escapedTitles = impactedTestNames.map((title) =>
-    title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-  );
+  const escapedTitles = impactedTestNames
+    .concat(newTests)
+    .map((title) => title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
 
   const regexPattern = escapedTitles.join('|');
 
