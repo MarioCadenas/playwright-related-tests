@@ -35,10 +35,18 @@ async function findRelatedTests(
     `git diff --name-only master...HEAD`,
   );
   const { stdout: nonStaged } = await exec('git diff --name-only HEAD');
+  const { stdout: nonTracked } = await exec(
+    'git ls-files --others --exclude-standard',
+  );
   const againstMasterModifiedFiles = againstMaster.trim().split('\n');
   const nonStagedModifiedFiles = nonStaged.trim().split('\n');
+  const nonTrackedFiles = nonTracked.trim().split('\n');
   const modifiedFiles = Array.from(
-    new Set([...nonStagedModifiedFiles, ...againstMasterModifiedFiles]),
+    new Set([
+      ...nonStagedModifiedFiles,
+      ...againstMasterModifiedFiles,
+      ...nonTrackedFiles,
+    ]),
   );
   const relationShipManager = new RelationshipManager(
     modifiedFiles,

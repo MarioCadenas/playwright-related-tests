@@ -114,7 +114,7 @@ async function storeAffectedFiles(
   coverage: CoverageReport[],
   localConnector: LocalFileSystemConnector,
 ) {
-  const testName = testInfo.titlePath.join(' - ').replaceAll('/', '~');
+  const testName = testInfo.titlePath.join(' ').replaceAll('/', '~');
   const file = testInfo.file;
   const snapshotsDir = testInfo.snapshotDir;
   const rtc = RelatedTestsConfig.instance;
