@@ -56,7 +56,7 @@ async function findRelatedTests(
 }
 
 async function findNewlyAddedTests() {
-  const listOfNewTests: string[] = [];
+  const listOfNewTests = new Set<string>();
 
   const [
     testListPromise,
@@ -73,14 +73,14 @@ async function findNewlyAddedTests() {
     testListPromise.status === 'rejected' ||
     untrackedFilesAgainstMasterPromise.status === 'rejected'
   ) {
-    return listOfNewTests;
+    return [];
   }
 
   const { stdout: newFilesComparedWithHead } = untrackedFilesPromise.value;
   const { stdout: newFilesComparedWithMaster } =
     untrackedFilesAgainstMasterPromise.value;
   if (!newFilesComparedWithHead && !newFilesComparedWithMaster) {
-    return listOfNewTests;
+    return [];
   }
 
   const untrackedFiles = newFilesComparedWithHead
@@ -94,12 +94,12 @@ async function findNewlyAddedTests() {
   for (const test of testList) {
     for (const spec of test.specs) {
       if (untrackedFiles.includes(test.file)) {
-        listOfNewTests.push(`${test.file} ${test.title} ${spec.title}`);
+        listOfNewTests.add(`${test.file} ${test.title} ${spec.title}`);
       }
     }
   }
 
-  return listOfNewTests;
+  return Array.from(listOfNewTests);
 }
 
 export async function getImpactedTestsRegex(
