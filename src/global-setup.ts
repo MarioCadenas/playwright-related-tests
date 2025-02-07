@@ -1,9 +1,8 @@
 import { type FullConfig } from '@playwright/test';
-import type { JSONReportSuite } from '@playwright/test/reporter';
 import { exec as syncExec } from 'node:child_process';
-import fs from 'node:fs';
-
+import path from 'node:path';
 import { promisify } from 'node:util';
+
 import { RelatedTestsConfig } from './config';
 import { logger } from './logger';
 import { RelationshipManager } from './relationship';
@@ -18,8 +17,6 @@ import type {
   S3ConnectorParamsOptions,
 } from './connectors/types';
 import type { Constructor, RelationshipType } from './types';
-import { CONFIG_FOLDER } from './constants';
-import path from 'node:path';
 import { getPWTestList } from './utils';
 
 const exec = promisify(syncExec);
@@ -60,14 +57,31 @@ async function findRelatedTests(
 
 async function findNewlyAddedTests() {
   const listOfNewTests: string[] = [];
-  const [testList, { stdout }] = await Promise.all([
+
+  const [testListPromise, untrackedFilesPromise] = await Promise.allSettled([
     getPWTestList(),
-    exec(`git ls-files --others --exclude-standard | grep '\.spec\..*$'`),
+    exec('git ls-files --others --exclude-standard'),
   ]);
+
+  if (
+    untrackedFilesPromise.status === 'rejected' ||
+    testListPromise.status === 'rejected'
+  ) {
+    return listOfNewTests;
+  }
+
+  const { stdout } = untrackedFilesPromise.value;
+  if (!stdout) {
+    return listOfNewTests;
+  }
+
   const untrackedFiles = stdout
     .trim()
     .split('\n')
-    .map((file) => path.basename(file));
+    .map((file) => path.basename(file))
+    .filter((file) => file.includes('.spec.') || file.includes('.test.'));
+
+  const testList = testListPromise.value;
   for (const test of testList) {
     for (const spec of test.specs) {
       if (untrackedFiles.includes(test.file)) {
@@ -75,6 +89,7 @@ async function findNewlyAddedTests() {
       }
     }
   }
+
   return listOfNewTests;
 }
 
