@@ -58,24 +58,33 @@ async function findRelatedTests(
 async function findNewlyAddedTests() {
   const listOfNewTests: string[] = [];
 
-  const [testListPromise, untrackedFilesPromise] = await Promise.allSettled([
+  const [
+    testListPromise,
+    untrackedFilesPromise,
+    untrackedFilesAgainstMasterPromise,
+  ] = await Promise.allSettled([
     getPWTestList(),
     exec('git ls-files --others --exclude-standard'),
+    exec('git diff --name-only --diff-filter=A master..HEAD'),
   ]);
 
   if (
     untrackedFilesPromise.status === 'rejected' ||
-    testListPromise.status === 'rejected'
+    testListPromise.status === 'rejected' ||
+    untrackedFilesAgainstMasterPromise.status === 'rejected'
   ) {
     return listOfNewTests;
   }
 
-  const { stdout } = untrackedFilesPromise.value;
-  if (!stdout) {
+  const { stdout: newFilesComparedWithHead } = untrackedFilesPromise.value;
+  const { stdout: newFilesComparedWithMaster } =
+    untrackedFilesAgainstMasterPromise.value;
+  if (!newFilesComparedWithHead && !newFilesComparedWithMaster) {
     return listOfNewTests;
   }
 
-  const untrackedFiles = stdout
+  const untrackedFiles = newFilesComparedWithHead
+    .concat(newFilesComparedWithMaster)
     .trim()
     .split('\n')
     .map((file) => path.basename(file))
