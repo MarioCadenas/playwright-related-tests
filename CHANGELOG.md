@@ -1,3 +1,10 @@
+## [1.6.2](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.6.1...v1.6.2) (2025-02-07)
+
+
+### Bug Fixes
+
+* relationship files ([#21](https://github.com/MarioCadenas/playwright-related-tests/issues/21)) ([f6f7fda](https://github.com/MarioCadenas/playwright-related-tests/commit/f6f7fdae3663299a95744248e7452def55c2aa2a))
+
 ## [1.6.1](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.6.0...v1.6.1) (2025-02-07)
 
 
