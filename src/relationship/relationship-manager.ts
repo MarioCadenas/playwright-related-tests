@@ -81,8 +81,6 @@ export class RelationshipManager<T extends TRemoteConnector> {
         const exactTestName = file
           .replace('.json', '')
           .replace(fileName, '')
-          .replace(' - ', '')
-          .replaceAll(' - ', ' ')
           .trim();
 
         this.impactedTestFiles.add(exactFileName);
