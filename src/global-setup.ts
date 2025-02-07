@@ -30,8 +30,16 @@ async function findRelatedTests(
     | Constructor<TRemoteConnector>
     | undefined = typeof options === 'string' ? S3Connector : undefined,
 ): RelatedTests {
-  const { stdout } = await exec('git diff --name-only HEAD');
-  const modifiedFiles = stdout.trim().split('\n');
+  // TODO: We might need to allow configuring the master/main branch
+  const { stdout: againstMaster } = await exec(
+    `git diff --name-only master...HEAD`,
+  );
+  const { stdout: nonStaged } = await exec('git diff --name-only HEAD');
+  const againstMasterModifiedFiles = againstMaster.trim().split('\n');
+  const nonStagedModifiedFiles = nonStaged.trim().split('\n');
+  const modifiedFiles = Array.from(
+    new Set([...nonStagedModifiedFiles, ...againstMasterModifiedFiles]),
+  );
   const relationShipManager = new RelationshipManager(
     modifiedFiles,
     remoteConnector,
