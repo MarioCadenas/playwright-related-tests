@@ -143,7 +143,7 @@ async function storeAffectedFiles(
 
   return Promise.all(
     coverage.map(async (entry) => {
-      if (entry.url.includes(rtcConfig.url)) {
+      if (!!rtcConfig.url && entry.url.includes(rtcConfig.url)) {
         if (!entry.source) {
           logger.warn(`${entry.url} has no source.`);
           return;

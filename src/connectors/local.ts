@@ -52,7 +52,7 @@ export class LocalFileSystemConnector extends LocalConnector {
 
   init() {
     if (!fs.existsSync(this.folder)) {
-      fs.mkdirSync(this.folder);
+      fs.mkdirSync(this.folder, { recursive: true });
     }
   }
 
