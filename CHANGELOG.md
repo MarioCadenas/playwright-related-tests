@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.7.0...v1.7.1) (2025-02-13)
+
+
+### Bug Fixes
+
+* affected files calculation ([#23](https://github.com/MarioCadenas/playwright-related-tests/issues/23)) ([0285b79](https://github.com/MarioCadenas/playwright-related-tests/commit/0285b790aa6fc856a0ea210a03aa2c061df7e804))
+
 # [1.7.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.6.3...v1.7.0) (2025-02-13)
 
 
