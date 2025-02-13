@@ -1,6 +1,8 @@
 import { type FullConfig } from '@playwright/test';
 import { exec as syncExec } from 'node:child_process';
+import path from 'node:path';
 import { promisify } from 'node:util';
+
 import { RelatedTestsConfig } from './config';
 import { logger } from './logger';
 import { RelationshipManager } from './relationship';
@@ -15,6 +17,7 @@ import type {
   S3ConnectorParamsOptions,
 } from './connectors/types';
 import type { Constructor, RelationshipType } from './types';
+import { getPWTestList } from './utils';
 
 const exec = promisify(syncExec);
 
@@ -60,6 +63,53 @@ async function findRelatedTests(
   return relationShipManager.extractRelationships();
 }
 
+async function findNewlyAddedTests() {
+  const listOfNewTests = new Set<string>();
+
+  const [
+    testListPromise,
+    untrackedFilesPromise,
+    untrackedFilesAgainstMasterPromise,
+  ] = await Promise.allSettled([
+    getPWTestList(),
+    exec('git ls-files --others --exclude-standard'),
+    exec('git diff --name-only --diff-filter=A master..HEAD'),
+  ]);
+
+  if (
+    untrackedFilesPromise.status === 'rejected' ||
+    testListPromise.status === 'rejected' ||
+    untrackedFilesAgainstMasterPromise.status === 'rejected'
+  ) {
+    return [];
+  }
+
+  const { stdout: newFilesComparedWithHead } = untrackedFilesPromise.value;
+  const { stdout: newFilesComparedWithMaster } =
+    untrackedFilesAgainstMasterPromise.value;
+  if (!newFilesComparedWithHead && !newFilesComparedWithMaster) {
+    return [];
+  }
+
+  const untrackedFiles = newFilesComparedWithHead
+    .concat(newFilesComparedWithMaster)
+    .trim()
+    .split('\n')
+    .map((file) => path.basename(file))
+    .filter((file) => file.includes('.spec.') || file.includes('.test.'));
+
+  const testList = testListPromise.value;
+  for (const test of testList) {
+    for (const spec of test.specs) {
+      if (untrackedFiles.includes(test.file)) {
+        listOfNewTests.add(`${test.file} ${test.title} ${spec.title}`);
+      }
+    }
+  }
+
+  return Array.from(listOfNewTests);
+}
+
 export async function getImpactedTestsRegex(
   type?: RelationshipType,
   options?: ConnectorOptions,
@@ -67,20 +117,19 @@ export async function getImpactedTestsRegex(
     | Constructor<TRemoteConnector>
     | undefined = typeof options === 'string' ? S3Connector : undefined,
 ): Promise<RegExp | undefined> {
-  const { impactedTestNames } = await findRelatedTests(
-    type,
-    options,
-    remoteConnector,
-  );
+  const [{ impactedTestNames }, newTests] = await Promise.all([
+    findRelatedTests(type, options, remoteConnector),
+    findNewlyAddedTests(),
+  ]);
 
-  if (impactedTestNames.length === 0) {
+  if (impactedTestNames.length === 0 && newTests.length === 0) {
     logger.debug(`No tests impacted by changes`);
     return;
   }
 
-  const escapedTitles = impactedTestNames.map((title) =>
-    title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-  );
+  const escapedTitles = impactedTestNames
+    .concat(newTests)
+    .map((title) => title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
 
   const regexPattern = escapedTitles.join('|');
 
