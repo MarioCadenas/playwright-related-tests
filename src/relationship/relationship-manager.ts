@@ -76,7 +76,7 @@ export class RelationshipManager<T extends TRemoteConnector> {
       );
 
       if (impacted) {
-        const fileName = file.replace('.json', '').split(' - ')[0]!;
+        const fileName = file.replace('.json', '').split(' ')[0]!.trim();
         const exactFileName = fileName.replaceAll('~', '/');
         const exactTestName = file
           .replace('.json', '')
