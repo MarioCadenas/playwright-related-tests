@@ -1,3 +1,10 @@
+## [1.6.3](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.6.2...v1.6.3) (2025-02-13)
+
+
+### Bug Fixes
+
+* test timeouts due to sourcemap logic ([#22](https://github.com/MarioCadenas/playwright-related-tests/issues/22)) ([c1ad211](https://github.com/MarioCadenas/playwright-related-tests/commit/c1ad2112504b7d80c4f98eaed5d6f0be003f81d5))
+
 ## [1.6.2](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.6.1...v1.6.2) (2025-02-07)
 
 
