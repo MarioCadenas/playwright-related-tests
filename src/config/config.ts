@@ -81,7 +81,7 @@ export default class RelatedTestsConfig {
 
   private saveToDisk() {
     if (!fs.existsSync(CONFIG_FOLDER)) {
-      fs.mkdirSync(CONFIG_FOLDER);
+      fs.mkdirSync(CONFIG_FOLDER, { recursive: true });
     }
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(this.config));
   }
