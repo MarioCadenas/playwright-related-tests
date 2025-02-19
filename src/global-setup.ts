@@ -34,13 +34,15 @@ async function findRelatedTests(
     | undefined = typeof options === 'string' ? S3Connector : undefined,
 ): RelatedTests {
   // TODO: We might need to allow configuring the master/main branch
-  const { stdout: againstMaster } = await exec(
-    `git diff --name-only master...HEAD`,
-  );
-  const { stdout: nonStaged } = await exec('git diff --name-only HEAD');
-  const { stdout: nonTracked } = await exec(
-    'git ls-files --others --exclude-standard',
-  );
+  const [
+    { stdout: againstMaster },
+    { stdout: nonStaged },
+    { stdout: nonTracked },
+  ] = await Promise.all([
+    exec(`git diff --name-only master...HEAD`),
+    exec('git diff --name-only HEAD'),
+    exec('git ls-files --others --exclude-standard'),
+  ]);
   const againstMasterModifiedFiles = againstMaster.trim().split('\n');
   const nonStagedModifiedFiles = nonStaged.trim().split('\n');
   const nonTrackedFiles = nonTracked.trim().split('\n');
@@ -51,6 +53,9 @@ async function findRelatedTests(
       ...nonTrackedFiles,
     ]),
   );
+
+  logger.debug(`List of modified files:\n${modifiedFiles.join('\n')}`);
+
   const relationShipManager = new RelationshipManager(
     modifiedFiles,
     remoteConnector,
