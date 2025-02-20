@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.7.2...v1.8.0) (2025-02-20)
+
+
+### Features
+
+* improve diffing ([#25](https://github.com/MarioCadenas/playwright-related-tests/issues/25)) ([f39e56f](https://github.com/MarioCadenas/playwright-related-tests/commit/f39e56f9806c5bd99bc93f46712e985dc7ada2a5))
+
 ## [1.7.2](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.7.1...v1.7.2) (2025-02-19)
 
 
