@@ -96,9 +96,11 @@ export class RelationshipManager<T extends TRemoteConnector> {
     const impactedTestNames = Array.from(this.impactedTestNames);
 
     // TODO: improve this log
-    logger.debug(`Running only impacted tests files \n
+    if (impactedTestFiles?.length) {
+      logger.debug(`Running only impacted tests files \n
 ${chalk.cyan(Array.from(impactedTestFiles).join('\n\n'))}
 `);
+    }
 
     return {
       impactedTestFiles,

@@ -103,6 +103,12 @@ async function findNewlyAddedTests() {
     .map((file) => path.basename(file))
     .filter((file) => file.includes('.spec.') || file.includes('.test.'));
 
+  if (!untrackedFiles?.length) {
+    return [];
+  }
+
+  logger.debug(`List of newly added tests:\n${untrackedFiles.join('\n')}`);
+
   const testList = testListPromise.value;
   for (const test of testList) {
     for (const spec of test.specs) {
