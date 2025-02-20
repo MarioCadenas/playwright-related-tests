@@ -99,7 +99,9 @@ export class EndpointConnector extends RemoteConnector {
         `File downloaded successfully from ${endpointUrl} to ${filePath}`,
       );
     } catch (e) {
-      logger.error(`File could not be fetched: ${e}`);
+      logger.error(
+        `File ${filename} could not be fetched at ${endpointUrl}: ${e}`,
+      );
       return null;
     }
 
