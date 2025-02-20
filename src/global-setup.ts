@@ -33,13 +33,13 @@ async function findRelatedTests(
     | Constructor<TRemoteConnector>
     | undefined = typeof options === 'string' ? S3Connector : undefined,
 ): RelatedTests {
-  // TODO: We might need to allow configuring the master/main branch
   const [
     { stdout: againstMaster },
     { stdout: nonStaged },
     { stdout: nonTracked },
   ] = await Promise.all([
-    exec(`git diff --name-only master...HEAD`),
+    // TODO: We need to allow configuring the master/main branch
+    exec(`git diff --name-only $(git merge-base HEAD origin/master)..HEAD`),
     exec('git diff --name-only HEAD'),
     exec('git ls-files --others --exclude-standard'),
   ]);
