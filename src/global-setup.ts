@@ -112,7 +112,7 @@ async function findNewlyAddedTests() {
   const testList = testListPromise.value;
   for (const test of testList) {
     for (const spec of test.specs) {
-      if (untrackedFiles.includes(test.file)) {
+      if (untrackedFiles.includes(path.basename(test.file))) {
         listOfNewTests.add(`${test.file} ${test.title} ${spec.title}`);
       }
     }
