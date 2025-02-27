@@ -15,6 +15,7 @@ import { AFFECTED_FILES_FOLDER } from '../constants';
 import { logger } from '../logger';
 
 type CoverageResult = Awaited<ReturnType<Coverage['stopJSCoverage']>>;
+type PageReload = ReturnType<Page['reload']>;
 
 export interface PlaywrightRelatedTestsPage extends Page {
   stopJSCoverage: () => Promise<void | CoverageResult>;
@@ -36,7 +37,7 @@ const extendedTest = test.extend<{
     const testInfo = test.info();
 
     const coverageResult = {
-      cov: undefined as void | CoverageResult,
+      cov: [] as CoverageResult,
       async startJSCoverage() {
         return await safeCoverageMethod(page, 'startJSCoverage');
       },
@@ -44,15 +45,24 @@ const extendedTest = test.extend<{
         const coverage = await safeCoverageMethod(page, 'stopJSCoverage');
 
         if (coverage) {
-          this.cov = coverage;
+          this.cov.push(...coverage);
         }
 
         return this.cov;
       },
     };
 
+    const pageReload = page.reload.bind(page);
+
     page.startJSCoverage = coverageResult.startJSCoverage.bind(coverageResult);
     page.stopJSCoverage = coverageResult.stopJSCoverage.bind(coverageResult);
+
+    page.reload = async function reload(...args): PageReload {
+      await page.stopJSCoverage();
+      const result = await pageReload(...args);
+      await page.startJSCoverage();
+      return result;
+    };
 
     await page.startJSCoverage();
 
@@ -60,7 +70,7 @@ const extendedTest = test.extend<{
 
     const coverage = await page.stopJSCoverage();
 
-    if (coverage) {
+    if (coverage && coverage.length > 0) {
       const localConnector = new LocalFileSystemConnector(
         AFFECTED_FILES_FOLDER,
       );
