@@ -1,3 +1,10 @@
+## [1.8.3](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.8.2...v1.8.3) (2025-02-27)
+
+
+### Bug Fixes
+
+* continue coverage after page reload ([#28](https://github.com/MarioCadenas/playwright-related-tests/issues/28)) ([7f92f0e](https://github.com/MarioCadenas/playwright-related-tests/commit/7f92f0e7d61e804907eb18144b59bcb745aeb444))
+
 ## [1.8.2](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.8.1...v1.8.2) (2025-02-25)
 
 
