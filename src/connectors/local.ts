@@ -64,6 +64,10 @@ export class LocalFileSystemConnector extends LocalConnector {
     return fs.readFileSync(path.join(this.folder, file), 'utf-8');
   }
 
+  exists(testName: string) {
+    return fs.existsSync(path.join(this.folder, `${testName}.json`));
+  }
+
   addRelationship(testName: string, fileName: string) {
     if (fileName.length === 0) return;
 

@@ -71,17 +71,18 @@ export class RelationshipManager<T extends TRemoteConnector> {
       const affected = this.connectors.local.getFileContent(file);
       const affectedFiles: string[] = JSON.parse(affected);
 
+      const alwaysRun = file.includes('--always-run');
       const impacted = affectedFiles.some((f) =>
         this.modifiedFiles.includes(f),
       );
 
-      if (impacted) {
-        const fileName = file.replace('.json', '').split(' ')[0]!.trim();
+      if (impacted || alwaysRun) {
+        const cleanedFileName = file
+          .replace('--always-run', '')
+          .replace('.json', '');
+        const fileName = cleanedFileName.split(' ')[0]!.trim();
         const exactFileName = fileName.replaceAll('~', '/');
-        const exactTestName = file
-          .replace('.json', '')
-          .replace(fileName, '')
-          .trim();
+        const exactTestName = cleanedFileName.replace(fileName, '').trim();
 
         this.impactedTestFiles.add(exactFileName);
         this.impactedTestNames.add(`${exactFileName} ${exactTestName}`);
