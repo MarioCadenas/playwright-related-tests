@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.8.3...v1.9.0) (2025-03-06)
+
+
+### Features
+
+* allow always run files ([#29](https://github.com/MarioCadenas/playwright-related-tests/issues/29)) ([a291f26](https://github.com/MarioCadenas/playwright-related-tests/commit/a291f2694a768058d51988bac714271dd36a2dff))
+
 ## [1.8.3](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.8.2...v1.8.3) (2025-02-27)
 
 
