@@ -9,6 +9,7 @@ describe('RelationshipManager', () => {
   const mockFiles = [
     'Component1~Component1.spec.ts Component1 shows basic component when hovering.json',
     'Component2~visual-regression~Component2.spec.ts Component2 Visual regression test - Component2 - Hover - component2-hover - dark.json',
+    'Component3~Component3.spec.ts Component3 shows basic component--always-run.json',
   ];
   const modifiedFiles = [
     'e2e/tests/vrt/Component1.spec.ts',
@@ -35,10 +36,12 @@ describe('RelationshipManager', () => {
     expect(impactedTestFiles).toStrictEqual([
       'Component1/Component1.spec.ts',
       'Component2/visual-regression/Component2.spec.ts',
+      'Component3/Component3.spec.ts',
     ]);
     expect(impactedTestNames).toStrictEqual([
       'Component1/Component1.spec.ts Component1 shows basic component when hovering',
       'Component2/visual-regression/Component2.spec.ts Component2 Visual regression test - Component2 - Hover - component2-hover - dark',
+      'Component3/Component3.spec.ts Component3 shows basic component',
     ]);
   });
 });

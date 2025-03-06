@@ -69,14 +69,25 @@ const extendedTest = test.extend<{
     await use(page);
 
     const coverage = await page.stopJSCoverage();
+    const testName = testInfo.titlePath.join(' ').replaceAll('/', '~').trim();
+    const localConnector = new LocalFileSystemConnector(AFFECTED_FILES_FOLDER);
 
     if (coverage && coverage.length > 0) {
-      const localConnector = new LocalFileSystemConnector(
-        AFFECTED_FILES_FOLDER,
-      );
-
-      await storeAffectedFiles(testInfo, coverage, localConnector);
+      await storeAffectedFiles(testName, testInfo, coverage, localConnector);
       localConnector.writeAffectedFiles();
+    } else {
+      // We need to check if it exists in case it was written by a browser with coverage before.
+      // to avoid overwriting the file. If that happens then we mark this file as always run,
+      // since we can't know which files are related to it.
+      if (!localConnector.exists(testName)) {
+        await storeAffectedFiles(
+          `${testName}--always-run`,
+          testInfo,
+          [],
+          localConnector,
+        );
+        localConnector.writeAffectedFiles();
+      }
     }
   },
 });
@@ -120,11 +131,11 @@ function getProcessEnvValue(key: string): string {
 }
 
 async function storeAffectedFiles(
+  testName: string,
   testInfo: TestInfo,
   coverage: CoverageReport[],
   localConnector: LocalFileSystemConnector,
 ) {
-  const testName = testInfo.titlePath.join(' ').replaceAll('/', '~').trim();
   const file = testInfo.file;
   const snapshotsDir = testInfo.snapshotDir;
   const rtc = RelatedTestsConfig.instance;
