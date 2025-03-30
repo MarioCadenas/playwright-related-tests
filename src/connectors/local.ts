@@ -46,6 +46,10 @@ export class LocalFileSystemConnector extends LocalConnector {
     );
   }
 
+  hasAnyFiles() {
+    return fs.readdirSync(this.folder).length > 0;
+  }
+
   getFolder() {
     return this.folder;
   }
