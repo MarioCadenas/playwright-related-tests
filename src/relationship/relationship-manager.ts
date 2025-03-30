@@ -90,6 +90,10 @@ export class RelationshipManager<T extends TRemoteConnector> {
     }
   }
 
+  hasRelationshipFiles() {
+    return this.connectors.local.hasAnyFiles();
+  }
+
   extractRelationships() {
     this.collectAffectedFiles();
 
