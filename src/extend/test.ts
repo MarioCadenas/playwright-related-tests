@@ -9,17 +9,20 @@ import path from 'node:path';
 import { RelatedTestsConfig } from '../config';
 import { FilePreparator } from '../file-preparator';
 import { getSourceMap } from './source-map';
-import type { CoverageReport } from './types';
 import { LocalFileSystemConnector } from '../connectors';
 import { AFFECTED_FILES_FOLDER } from '../constants';
 import { logger } from '../logger';
 
 type CoverageResult = Awaited<ReturnType<Coverage['stopJSCoverage']>>;
+type CSSCoverageResult = Awaited<ReturnType<Coverage['stopCSSCoverage']>>;
+
 type PageReload = ReturnType<Page['reload']>;
 
 export interface PlaywrightRelatedTestsPage extends Page {
   stopJSCoverage: () => Promise<void | CoverageResult>;
   startJSCoverage: () => Promise<void>;
+  stopCSSCoverage: () => Promise<void | CSSCoverageResult>;
+  startCSSCoverage: () => Promise<void>;
 }
 
 /** @internal */
@@ -38,6 +41,7 @@ const extendedTest = test.extend<{
 
     const coverageResult = {
       cov: [] as CoverageResult,
+      cssCoverage: [] as CSSCoverageResult,
       async startJSCoverage() {
         return await safeCoverageMethod(page, 'startJSCoverage');
       },
@@ -50,25 +54,44 @@ const extendedTest = test.extend<{
 
         return this.cov;
       },
+      async startCSSCoverage() {
+        return await safeCoverageMethod(page, 'startCSSCoverage');
+      },
+      async stopCSSCoverage(): Promise<void | CSSCoverageResult> {
+        const coverage = await safeCoverageMethod(page, 'stopCSSCoverage');
+
+        if (coverage) {
+          this.cssCoverage.push(...coverage);
+        }
+
+        return this.cssCoverage;
+      },
     };
 
     const pageReload = page.reload.bind(page);
 
     page.startJSCoverage = coverageResult.startJSCoverage.bind(coverageResult);
     page.stopJSCoverage = coverageResult.stopJSCoverage.bind(coverageResult);
+    page.startCSSCoverage =
+      coverageResult.startCSSCoverage.bind(coverageResult);
+    page.stopCSSCoverage = coverageResult.stopCSSCoverage.bind(coverageResult);
 
     page.reload = async function reload(...args): PageReload {
-      await page.stopJSCoverage();
+      await Promise.all([page.stopJSCoverage(), page.stopCSSCoverage()]);
       const result = await pageReload(...args);
-      await page.startJSCoverage();
+      await Promise.all([page.startJSCoverage(), page.startCSSCoverage()]);
       return result;
     };
 
-    await page.startJSCoverage();
+    await Promise.all([page.startJSCoverage(), page.startCSSCoverage()]);
 
     await use(page);
 
-    const coverage = await page.stopJSCoverage();
+    const [jsCoverage, cssCoverage] = await Promise.all([
+      page.stopJSCoverage(),
+      page.stopCSSCoverage(),
+    ]);
+    const coverage = [...(jsCoverage ?? []), ...(cssCoverage ?? [])];
     const testName = testInfo.titlePath.join(' ').replaceAll('/', '~').trim();
     const localConnector = new LocalFileSystemConnector(AFFECTED_FILES_FOLDER);
 
@@ -130,10 +153,12 @@ function getProcessEnvValue(key: string): string {
   return value;
 }
 
+type CoverageEntry = CoverageResult[number] | CSSCoverageResult[number];
+
 async function storeAffectedFiles(
   testName: string,
   testInfo: TestInfo,
-  coverage: CoverageReport[],
+  coverage: CoverageEntry[],
   localConnector: LocalFileSystemConnector,
 ) {
   const file = testInfo.file;
@@ -165,31 +190,39 @@ async function storeAffectedFiles(
   return Promise.all(
     coverage.map(async (entry) => {
       if (!!rtcConfig.url && entry.url.includes(rtcConfig.url)) {
-        if (!entry.source) {
+        if ('source' in entry && !entry.source) {
           logger.warn(`${entry.url} has no source.`);
           return;
         }
 
-        const sourceMap = await getSourceMap(entry, headers);
+        if ('source' in entry) {
+          const sourceMap = await getSourceMap(entry, headers);
 
-        if (sourceMap) {
-          const sources = [...sourceMap.sources]
-            .filter(filePreparator.outOfProjectFiles)
-            .map(filePreparator.toGitComparable);
+          if (sourceMap) {
+            const sources = [...sourceMap.sources]
+              .filter(filePreparator.outOfProjectFiles)
+              .map(filePreparator.toGitComparable);
 
-          const files = new Set(sources);
+            const files = new Set(sources);
 
-          for (const source of files.values()) {
-            localConnector.addRelationship(testName, source);
+            for (const source of files.values()) {
+              localConnector.addRelationship(testName, source);
+            }
+          } else {
+            if (filePreparator.outOfProjectFiles(entry.url)) {
+              const preparedFile = filePreparator.toGitComparable(
+                entry.url.replace(rtcConfig.url + '/', ''),
+              );
+
+              localConnector.addRelationship(testName, preparedFile);
+            }
           }
-        } else {
-          if (filePreparator.outOfProjectFiles(entry.url)) {
-            const preparedFile = filePreparator.toGitComparable(
-              entry.url.replace(rtcConfig.url + '/', ''),
-            );
+        } else if (filePreparator.outOfProjectFiles(entry.url)) {
+          const preparedFile = filePreparator.toGitComparable(
+            entry.url.replace(rtcConfig.url + '/', ''),
+          );
 
-            localConnector.addRelationship(testName, preparedFile);
-          }
+          localConnector.addRelationship(testName, preparedFile);
         }
       }
     }),
