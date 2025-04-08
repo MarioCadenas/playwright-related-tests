@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.9.0...v1.10.0) (2025-04-08)
+
+
+### Features
+
+* force run if no relationships exist ([#31](https://github.com/MarioCadenas/playwright-related-tests/issues/31)) ([73e7b6c](https://github.com/MarioCadenas/playwright-related-tests/commit/73e7b6c93c4dd2efc4a46f4839585db1045e7e3e))
+
 # [1.9.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.8.3...v1.9.0) (2025-03-06)
 
 
