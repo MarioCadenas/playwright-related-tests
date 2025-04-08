@@ -24,6 +24,7 @@ const exec = promisify(syncExec);
 type RelatedTests = Promise<{
   impactedTestFiles: string[];
   impactedTestNames: string[];
+  hasRelationshipFiles: boolean;
 }>;
 
 async function findRelatedTests(
@@ -65,7 +66,12 @@ async function findRelatedTests(
     options,
   });
 
-  return relationShipManager.extractRelationships();
+  const hasRelationshipFiles = relationShipManager.hasRelationshipFiles();
+
+  return {
+    ...relationShipManager.extractRelationships(),
+    hasRelationshipFiles,
+  };
 }
 
 async function findNewlyAddedTests() {
@@ -127,11 +133,16 @@ export async function getImpactedTestsRegex(
   remoteConnector:
     | Constructor<TRemoteConnector>
     | undefined = typeof options === 'string' ? S3Connector : undefined,
-): Promise<RegExp | undefined> {
-  const [{ impactedTestNames }, newTests] = await Promise.all([
-    findRelatedTests(type, options, remoteConnector),
-    findNewlyAddedTests(),
-  ]);
+): Promise<RegExp | undefined | { forceRun: boolean }> {
+  const [{ impactedTestNames, hasRelationshipFiles }, newTests] =
+    await Promise.all([
+      findRelatedTests(type, options, remoteConnector),
+      findNewlyAddedTests(),
+    ]);
+
+  if (!hasRelationshipFiles) {
+    return { forceRun: true };
+  }
 
   if (impactedTestNames.length === 0 && newTests.length === 0) {
     logger.debug(`No tests impacted by changes`);
@@ -176,6 +187,10 @@ export async function updateConfigWithImpactedTests(
     | undefined = typeof options === 'string' ? S3Connector : undefined,
 ): Promise<void> {
   const regex = await getImpactedTestsRegex(type, options, remoteConnector);
+
+  if (typeof regex === 'object' && 'forceRun' in regex) {
+    return;
+  }
 
   if (regex) {
     config.grep = regex;
