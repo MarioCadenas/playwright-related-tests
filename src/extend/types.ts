@@ -1,3 +1,5 @@
+import { type Coverage } from '@playwright/test';
+
 export type CoverageReportRange = {
   count: number;
   startOffset: number;
@@ -10,12 +12,14 @@ export type CoverageReportFunction = {
   ranges: CoverageReportRange[];
 };
 
-export type CoverageReport = {
-  url: string;
-  scriptId: string;
-  source?: string;
-  functions: CoverageReportFunction[];
-};
+export type JSCoverageReport = Awaited<ReturnType<Coverage['stopJSCoverage']>>;
+export type CSSCoverageReport = Awaited<
+  ReturnType<Coverage['stopCSSCoverage']>
+>;
+export type JSCoverageEntry = JSCoverageReport[number];
+export type CSSCoverageEntry = CSSCoverageReport[number];
+
+export type CoverageEntry = JSCoverageEntry | CSSCoverageEntry;
 
 export type SourceMap = {
   version: number;

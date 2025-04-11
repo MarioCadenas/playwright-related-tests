@@ -1,5 +1,5 @@
 import { logger } from '../logger';
-import type { CoverageReport, SourceMap } from './types';
+import type { CSSCoverageEntry, JSCoverageEntry, SourceMap } from './types';
 
 function replaceWebpackIfExists(sourceMap: SourceMap) {
   if (!sourceMap || sourceMap.sources.length === 0) {
@@ -13,14 +13,28 @@ function replaceWebpackIfExists(sourceMap: SourceMap) {
   };
 }
 
-export async function getSourceMap(
-  entry: CoverageReport,
+type Key = 'source' | 'text';
+
+type EntryData<T extends Key> = T extends 'source'
+  ? { entry: JSCoverageEntry; key: 'source' }
+  : { entry: CSSCoverageEntry; key: 'text' };
+
+export async function getSourceMap<T extends Key>(
+  entryData: EntryData<T>,
   headers: Record<string, string>,
 ) {
   const base64Header = 'data:application/json;charset=utf-8;base64,';
-  const match = [
-    ...(entry.source ?? '').matchAll(/\/\/# sourceMappingURL=(.*)/g),
-  ].map((match) => match[1]);
+  const regex =
+    entryData.key === 'source'
+      ? /\/\/# sourceMappingURL=(.*)/g
+      : /\/\*# sourceMappingURL=(.*) \*\//g;
+
+  const content =
+    entryData.key === 'source'
+      ? (entryData.entry as JSCoverageEntry).source
+      : (entryData.entry as CSSCoverageEntry).text;
+
+  const match = [...(content ?? '').matchAll(regex)].map((match) => match[1]);
 
   const sourceMappingBase64 = match.find((sourceMap) =>
     sourceMap?.startsWith(base64Header),
@@ -41,7 +55,7 @@ export async function getSourceMap(
 
   // relative path
   if (!sourceMappingURL && match.length > 0) {
-    sourceMappingURL = entry.url + '.map';
+    sourceMappingURL = entryData.entry.url + '.map';
   }
 
   if (sourceMappingURL) {

@@ -9,17 +9,24 @@ import path from 'node:path';
 import { RelatedTestsConfig } from '../config';
 import { FilePreparator } from '../file-preparator';
 import { getSourceMap } from './source-map';
-import type { CoverageReport } from './types';
 import { LocalFileSystemConnector } from '../connectors';
 import { AFFECTED_FILES_FOLDER } from '../constants';
 import { logger } from '../logger';
+import {
+  type JSCoverageReport,
+  type CSSCoverageReport,
+  type CoverageEntry,
+  type JSCoverageEntry,
+  type CSSCoverageEntry,
+} from './types';
 
-type CoverageResult = Awaited<ReturnType<Coverage['stopJSCoverage']>>;
 type PageReload = ReturnType<Page['reload']>;
 
 export interface PlaywrightRelatedTestsPage extends Page {
-  stopJSCoverage: () => Promise<void | CoverageResult>;
+  stopJSCoverage: () => Promise<void | JSCoverageReport>;
   startJSCoverage: () => Promise<void>;
+  stopCSSCoverage: () => Promise<void | CSSCoverageReport>;
+  startCSSCoverage: () => Promise<void>;
 }
 
 /** @internal */
@@ -37,11 +44,12 @@ const extendedTest = test.extend<{
     const testInfo = test.info();
 
     const coverageResult = {
-      cov: [] as CoverageResult,
+      cov: [] as JSCoverageReport,
+      cssCoverage: [] as CSSCoverageReport,
       async startJSCoverage() {
         return await safeCoverageMethod(page, 'startJSCoverage');
       },
-      async stopJSCoverage(): Promise<void | CoverageResult> {
+      async stopJSCoverage(): Promise<void | JSCoverageReport> {
         const coverage = await safeCoverageMethod(page, 'stopJSCoverage');
 
         if (coverage) {
@@ -50,25 +58,44 @@ const extendedTest = test.extend<{
 
         return this.cov;
       },
+      async startCSSCoverage() {
+        return await safeCoverageMethod(page, 'startCSSCoverage');
+      },
+      async stopCSSCoverage(): Promise<void | CSSCoverageReport> {
+        const coverage = await safeCoverageMethod(page, 'stopCSSCoverage');
+
+        if (coverage) {
+          this.cssCoverage.push(...coverage);
+        }
+
+        return this.cssCoverage;
+      },
     };
 
     const pageReload = page.reload.bind(page);
 
     page.startJSCoverage = coverageResult.startJSCoverage.bind(coverageResult);
     page.stopJSCoverage = coverageResult.stopJSCoverage.bind(coverageResult);
+    page.startCSSCoverage =
+      coverageResult.startCSSCoverage.bind(coverageResult);
+    page.stopCSSCoverage = coverageResult.stopCSSCoverage.bind(coverageResult);
 
     page.reload = async function reload(...args): PageReload {
-      await page.stopJSCoverage();
+      await Promise.all([page.stopJSCoverage(), page.stopCSSCoverage()]);
       const result = await pageReload(...args);
-      await page.startJSCoverage();
+      await Promise.all([page.startJSCoverage(), page.startCSSCoverage()]);
       return result;
     };
 
-    await page.startJSCoverage();
+    await Promise.all([page.startJSCoverage(), page.startCSSCoverage()]);
 
     await use(page);
 
-    const coverage = await page.stopJSCoverage();
+    const [jsCoverage, cssCoverage] = await Promise.all([
+      page.stopJSCoverage(),
+      page.stopCSSCoverage(),
+    ]);
+    const coverage = [...(jsCoverage ?? []), ...(cssCoverage ?? [])];
     const testName = testInfo.titlePath.join(' ').replaceAll('/', '~').trim();
     const localConnector = new LocalFileSystemConnector(AFFECTED_FILES_FOLDER);
 
@@ -133,7 +160,7 @@ function getProcessEnvValue(key: string): string {
 async function storeAffectedFiles(
   testName: string,
   testInfo: TestInfo,
-  coverage: CoverageReport[],
+  coverage: CoverageEntry[],
   localConnector: LocalFileSystemConnector,
 ) {
   const file = testInfo.file;
@@ -164,32 +191,53 @@ async function storeAffectedFiles(
 
   return Promise.all(
     coverage.map(async (entry) => {
+      const isJSCoverage = 'source' in entry;
+      const isCSSCoverage = 'text' in entry;
+
       if (!!rtcConfig.url && entry.url.includes(rtcConfig.url)) {
-        if (!entry.source) {
+        if (isJSCoverage && !entry.source) {
           logger.warn(`${entry.url} has no source.`);
           return;
         }
 
-        const sourceMap = await getSourceMap(entry, headers);
+        if (isCSSCoverage && !entry.text) {
+          logger.warn(`${entry.url} has no text.`);
+          return;
+        }
 
-        if (sourceMap) {
-          const sources = [...sourceMap.sources]
-            .filter(filePreparator.outOfProjectFiles)
-            .map(filePreparator.toGitComparable);
+        if (isJSCoverage || isCSSCoverage) {
+          const sourceMap = await getSourceMap(
+            isJSCoverage
+              ? { entry: entry as JSCoverageEntry, key: 'source' }
+              : { entry: entry as CSSCoverageEntry, key: 'text' },
+            headers,
+          );
 
-          const files = new Set(sources);
+          if (sourceMap) {
+            const sources = [...sourceMap.sources]
+              .filter(filePreparator.outOfProjectFiles)
+              .map(filePreparator.toGitComparable);
 
-          for (const source of files.values()) {
-            localConnector.addRelationship(testName, source);
+            const files = new Set(sources);
+
+            for (const source of files.values()) {
+              localConnector.addRelationship(testName, source);
+            }
+          } else {
+            if (filePreparator.outOfProjectFiles(entry.url)) {
+              const preparedFile = filePreparator.toGitComparable(
+                entry.url.replace(rtcConfig.url + '/', ''),
+              );
+
+              localConnector.addRelationship(testName, preparedFile);
+            }
           }
-        } else {
-          if (filePreparator.outOfProjectFiles(entry.url)) {
-            const preparedFile = filePreparator.toGitComparable(
-              entry.url.replace(rtcConfig.url + '/', ''),
-            );
+        } else if (filePreparator.outOfProjectFiles(entry.url)) {
+          const preparedFile = filePreparator.toGitComparable(
+            entry.url.replace(rtcConfig.url + '/', ''),
+          );
 
-            localConnector.addRelationship(testName, preparedFile);
-          }
+          localConnector.addRelationship(testName, preparedFile);
         }
       }
     }),
