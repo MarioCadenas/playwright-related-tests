@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.10.0...v1.11.0) (2025-04-11)
+
+
+### Features
+
+* add css support ([#30](https://github.com/MarioCadenas/playwright-related-tests/issues/30)) ([87211f9](https://github.com/MarioCadenas/playwright-related-tests/commit/87211f9073365f1415a67076c5765e2e26ee9ef0))
+
 # [1.10.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.9.0...v1.10.0) (2025-04-08)
 
 
