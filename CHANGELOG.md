@@ -1,3 +1,10 @@
+## [1.11.1](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.11.0...v1.11.1) (2025-04-16)
+
+
+### Bug Fixes
+
+* css sourcemap regex ([#32](https://github.com/MarioCadenas/playwright-related-tests/issues/32)) ([cbdf100](https://github.com/MarioCadenas/playwright-related-tests/commit/cbdf1004d5c4cec502919edcb2c1ccd5318dc1e7))
+
 # [1.11.0](https://github.com/MarioCadenas/playwright-related-tests/compare/v1.10.0...v1.11.0) (2025-04-11)
 
 
