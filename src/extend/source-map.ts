@@ -27,7 +27,7 @@ export async function getSourceMap<T extends Key>(
   const regex =
     entryData.key === 'source'
       ? /\/\/# sourceMappingURL=(.*)/g
-      : /\/\*# sourceMappingURL=(.*) \*\//g;
+      : /\/\*# sourceMappingURL=(.*?)\s*\*\//g;
 
   const content =
     entryData.key === 'source'
